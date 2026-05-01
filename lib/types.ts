@@ -34,9 +34,28 @@ export interface ActionCard {
   color: string; // To match physical card colors
 }
 
+export type EconomyColor = 'GREEN' | 'RED' | 'BLUE' | 'PURPLE';
+
+export type EconomyEffectType = 
+  | 'PRICE_CHANGE' 
+  | 'DIVIDEND' 
+  | 'RESESI' 
+  | 'RESTRUKTURISASI' 
+  | 'PAJAK_JALAN' 
+  | 'STIMULUS' 
+  | 'EXTRA_FEE' 
+  | 'BUYBACK' 
+  | 'PENERBITAN_SAHAM'
+  | 'SIDEWAYS';
+
 export interface EconomyCard {
+  id: string;
   sector: Exclude<Sector, 'Reksadana'>;
-  value: number; // e.g. +2, -1
+  color: EconomyColor;
+  type: EconomyEffectType;
+  value: number; 
+  title: string;
+  description: string;
 }
 
 export type GlobalEventType = 'KRISIS_GLOBAL' | 'EKONOMI_BOOM' | 'SUKU_BUNGA' | 'STABIL';

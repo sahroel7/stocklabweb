@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { GameState, Player, Sector, ActionCard, EconomyCard, Phase, ActionType, GlobalEvent } from './types';
+import { generateEconomyDeck, applyEconomyPhase, INITIAL_PRICE } from './economyLogic';
 
-const INITIAL_PRICE = 5;
 const TOTAL_ROUNDS = 6;
 const NUM_PLAYERS = 5;
 
@@ -75,15 +75,6 @@ const getCardDescription = (type: ActionType, sector: string): string => {
     case 'STOCK_SPLIT': return `Lakukan Stock Split pada ${sector} sekarang juga.`;
     default: return '';
   }
-};
-
-const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> => {
-  const deck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> = {} as any;
-  SECTORS.forEach(s => {
-    const values = [+2, +1, 0, -1, -2, +3].sort(() => Math.random() - 0.5);
-    deck[s] = values.map(v => ({ sector: s, value: v }));
-  });
-  return deck;
 };
 
 const generateEventDeck = (): GlobalEvent[] => {
@@ -331,7 +322,8 @@ set((state) => {
         case 'INFO_BURSA': {
           const nextRoundIndex = state.round - 1; 
           const econCard = state.economyDeck[card.sector][nextRoundIndex];
-          logMsg += ` (Ekonomi ${card.sector} mendatang: ${econCard.value > 0 ? '+' : ''}${econCard.value})`;
+          const valueStr = econCard.type === 'PRICE_CHANGE' ? ` (${econCard.value > 0 ? '+' : ''}${econCard.value})` : '';
+          logMsg += ` (Ekonomi ${card.sector} mendatang: ${econCard.title}${valueStr})`;
           break;
         }
         case 'RUMOR_POSITIF':
@@ -470,61 +462,15 @@ set((state) => {
     if (!state.currentEconomyCards) return state;
 
     const { sectors, event } = state.currentEconomyCards;
-    const newMarket = { ...state.market };
-    let newPlayers = [...state.players];
-    const logMsgs: string[] = [];
-
-    if (event) {
-      logMsgs.push(`Peristiwa Global: ${event.title} - ${event.description}`);
-      switch (event.type) {
-        case 'KRISIS_GLOBAL':
-          SECTORS.forEach(s => {
-            newMarket[s] = Math.max(0, newMarket[s] - 1);
-          });
-          break;
-        case 'EKONOMI_BOOM':
-          SECTORS.forEach(s => {
-            newMarket[s] = Math.min(15, newMarket[s] + 1);
-          });
-          break;
-        case 'SUKU_BUNGA':
-          break;
-      }
-    }
-
-    SECTORS.forEach(s => {
-      if (state.suspendedSectors.includes(s)) {
-        logMsgs.push(`${s} ditangguhkan (SUSPEND), harga tetap.`);
-        return;
-      }
-
-      const card = sectors[s];
-      if (card) {
-        newMarket[s] = Math.max(0, newMarket[s] + card.value);
-        logMsgs.push(`Ekonomi ${s}: ${card.value > 0 ? '+' : ''}${card.value}`);
-      }
-    });
-
-    const totalSectors = newMarket.Keuangan + newMarket.Perkebunan + newMarket.Pertambangan + newMarket.Properti;
-    newMarket.Reksadana = Math.floor(totalSectors / 4);
-
-    SECTORS.forEach(s => {
-      if (newMarket[s] > 12) {
-        newMarket[s] = 6;
-        newPlayers = newPlayers.map(p => ({
-          ...p,
-          portfolio: { ...p.portfolio, [s]: p.portfolio[s] * 2 }
-        }));
-        logMsgs.push(`STOCK SPLIT di ${s}! Jumlah saham pemain dikali dua.`);
-      } else if (newMarket[s] < 2) {
-        newMarket[s] = 5;
-        newPlayers = newPlayers.map(p => ({
-          ...p,
-          portfolio: { ...p.portfolio, [s]: 0 }
-        }));
-        logMsgs.push(`STOCK CRASH di ${s}! Semua investasi pemain di sektor ini hangus.`);
-      }
-    });
+    
+    const { newMarket, newPlayers, logMsgs } = applyEconomyPhase(
+      state.market,
+      state.players,
+      sectors as Record<Exclude<Sector, 'Reksadana'>, EconomyCard>,
+      state.turnOrder,
+      state.suspendedSectors,
+      event
+    );
 
     const isLastRound = state.round === TOTAL_ROUNDS;
 
