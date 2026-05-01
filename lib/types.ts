@@ -34,6 +34,14 @@ export interface EconomyCard {
   value: number; // e.g. +2, -1
 }
 
+export type GlobalEventType = 'KRISIS_GLOBAL' | 'EKONOMI_BOOM' | 'SUKU_BUNGA' | 'STABIL';
+
+export interface GlobalEvent {
+  type: GlobalEventType;
+  title: string;
+  description: string;
+}
+
 export interface GameState {
   round: number;
   phase: Phase;
@@ -43,6 +51,11 @@ export interface GameState {
   activePlayerIndex: number; // Index in turnOrder
   actionDeck: ActionCard[];
   economyDeck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]>;
+  eventDeck: GlobalEvent[];
+  currentEconomyCards: {
+    sectors: Record<Exclude<Sector, 'Reksadana'>, EconomyCard>;
+    event: GlobalEvent | null;
+  } | null;
   marketCards: ActionCard[];
   currentBids: Record<number, number>; // playerId -> bid amount
   suspendedSectors: Exclude<Sector, 'Reksadana'>[];

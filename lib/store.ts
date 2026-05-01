@@ -55,6 +55,18 @@ const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksadana'>, EconomyCard
   return deck;
 };
 
+const generateEventDeck = (): GlobalEvent[] => {
+  const events: GlobalEvent[] = [
+    { type: 'KRISIS_GLOBAL', title: 'Krisis Global', description: 'Krisis melanda! Semua harga sektor turun 1 poin.' },
+    { type: 'EKONOMI_BOOM', title: 'Ekonomi Boom', description: 'Ekonomi menguat! Semua harga sektor naik 1 poin.' },
+    { type: 'SUKU_BUNGA', title: 'Suku Bunga Naik', description: 'Inflasi terkendali. Harga semua sektor tetap (Stabil).' },
+    { type: 'STABIL', title: 'Pasar Stabil', description: 'Tidak ada peristiwa global khusus ronde ini.' },
+    { type: 'KRISIS_GLOBAL', title: 'Krisis Global', description: 'Krisis melanda! Semua harga sektor turun 1 poin.' },
+    { type: 'EKONOMI_BOOM', title: 'Ekonomi Boom', description: 'Ekonomi menguat! Semua harga sektor naik 1 poin.' },
+  ];
+  return events.sort(() => Math.random() - 0.5);
+};
+
 interface GameActions {
   submitBid: (playerId: number, amount: number) => void;
   resolveBidding: () => void;
@@ -64,6 +76,7 @@ interface GameActions {
   executeActionEffect: (playerId: number, card: ActionCard) => void;
   sellStock: (playerId: number, sector: Sector, amount: number) => void;
   resolveEconomy: () => void;
+  finishEconomyPhase: () => void;
   takeDebt: (playerId: number) => void;
   addLog: (message: string) => void;
   resetGame: () => void;
@@ -86,6 +99,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   activePlayerIndex: 0,
   actionDeck: generateActionDeck(),
   economyDeck: generateEconomyDeck(),
+  eventDeck: generateEventDeck(),
+  currentEconomyCards: null,
   marketCards: [],
   currentBids: {},
   suspendedSectors: [],
@@ -304,32 +319,98 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     }
   }),
 
-  resolveEconomy: () => set((state) => {
+  nextTurn: () => set((state) => {
+    let nextIndex = state.activePlayerIndex + 1;
+    
+    if (state.phase === 'ACTION') {
+      if (nextIndex >= NUM_PLAYERS) nextIndex = 0;
+      
+      if (state.marketCards.length === 0 && !state.pendingAction) {
+        return { 
+          activePlayerIndex: 0, 
+          phase: 'SELLING', 
+          logs: ['Semua kartu telah diambil. Fase: PENJUALAN.', ...state.logs] 
+        };
+      }
+      return { activePlayerIndex: nextIndex };
+    }
+
+    if (state.phase === 'SELLING') {
+      if (nextIndex >= NUM_PLAYERS) {
+        // All players finished selling, move to ECONOMY
+        const sectors: Record<string, EconomyCard> = {};
+        SECTORS.forEach(s => {
+          sectors[s] = state.economyDeck[s][state.round - 1];
+        });
+        const event = state.eventDeck[state.round - 1] || null;
+
+        return {
+          phase: 'ECONOMY',
+          currentEconomyCards: { sectors: sectors as any, event },
+          activePlayerIndex: 0,
+          logs: [`Semua pemain selesai menjual. Memasuki Fase Ekonomi Ronde ${state.round}.`, ...state.logs]
+        };
+      }
+      return { activePlayerIndex: nextIndex };
+    }
+
+    return state;
+  }),
+
+  resolveEconomy: () => {
+    // This is now handled by nextTurn at the end of SELLING phase
+    get().nextTurn();
+  },
+
+  finishEconomyPhase: () => set((state) => {
+    if (!state.currentEconomyCards) return state;
+
+    const { sectors, event } = state.currentEconomyCards;
     const newMarket = { ...state.market };
     let newPlayers = [...state.players];
     const logMsgs: string[] = [];
 
+    // 1. Apply Global Event FIRST (Purple Card)
+    if (event) {
+      logMsgs.push(`Peristiwa Global: ${event.title} - ${event.description}`);
+      switch (event.type) {
+        case 'KRISIS_GLOBAL':
+          SECTORS.forEach(s => {
+            newMarket[s] = Math.max(0, newMarket[s] - 1);
+          });
+          break;
+        case 'EKONOMI_BOOM':
+          SECTORS.forEach(s => {
+            newMarket[s] = Math.min(15, newMarket[s] + 1);
+          });
+          break;
+        case 'SUKU_BUNGA':
+          // Price remains stable
+          break;
+      }
+    }
+
+    // 2. Apply Sector Cards
     SECTORS.forEach(s => {
       if (state.suspendedSectors.includes(s)) {
         logMsgs.push(`${s} ditangguhkan (SUSPEND), harga tetap.`);
         return;
       }
 
-      const card = state.economyDeck[s][state.round - 1];
+      const card = sectors[s];
       if (card) {
         newMarket[s] = Math.max(0, newMarket[s] + card.value);
         logMsgs.push(`Ekonomi ${s}: ${card.value > 0 ? '+' : ''}${card.value}`);
       }
     });
 
-    // Update Reksadana (Avg of all 4)
+    // Update Reksadana (Avg)
     const totalSectors = newMarket.Keuangan + newMarket.Perkebunan + newMarket.Pertambangan + newMarket.Properti;
     newMarket.Reksadana = Math.floor(totalSectors / 4);
 
     // Apply Split/Crash
     SECTORS.forEach(s => {
       if (newMarket[s] > 12) {
-        // Stock Split
         newMarket[s] = 6;
         newPlayers = newPlayers.map(p => ({
           ...p,
@@ -337,7 +418,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         }));
         logMsgs.push(`STOCK SPLIT di ${s}! Jumlah saham pemain dikali dua.`);
       } else if (newMarket[s] < 2) {
-        // Stock Crash
         newMarket[s] = 5;
         newPlayers = newPlayers.map(p => ({
           ...p,
@@ -348,13 +428,14 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     });
 
     const isLastRound = state.round === TOTAL_ROUNDS;
-    
+
     return {
       market: newMarket,
       players: newPlayers,
       round: isLastRound ? state.round : state.round + 1,
       phase: isLastRound ? 'END' : 'BIDDING',
       suspendedSectors: [],
+      currentEconomyCards: null,
       logs: [...logMsgs.reverse(), `--- Ronde ${state.round} Berakhir ---`, ...state.logs]
     };
   }),
@@ -385,6 +466,8 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     activePlayerIndex: 0,
     actionDeck: generateActionDeck(),
     economyDeck: generateEconomyDeck(),
+    eventDeck: generateEventDeck(),
+    currentEconomyCards: null,
     marketCards: [],
     currentBids: {},
     suspendedSectors: [],

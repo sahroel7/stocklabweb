@@ -135,10 +135,10 @@ export const PlayerSection: React.FC = () => {
 
                {phase === 'SELLING' && activePlayerId === 0 && (
                  <button 
-                   onClick={resolveEconomy}
+                   onClick={() => useGameStore.getState().nextTurn()}
                    className="group flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
                  >
-                   Selesai & Update Ekonomi
+                   Selesai & Lanjut
                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                  </button>
                )}

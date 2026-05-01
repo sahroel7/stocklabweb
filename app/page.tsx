@@ -8,6 +8,7 @@ import { GameLog } from '@/components/game/GameLog';
 import { ActionTable } from '@/components/game/ActionTable';
 import { BiddingModal } from '@/components/game/BiddingModal';
 import { ChoiceModal } from '@/components/game/ChoiceModal';
+import { EconomyModal } from '@/components/game/EconomyModal';
 import { PlayerSection } from '@/components/game/PlayerSection';
 import { Trophy, RefreshCcw, Info, HelpCircle, X } from 'lucide-react';
 
@@ -98,15 +99,17 @@ export default function StocklabPage() {
           // Bot selling logic: Sell if cash is low (< 5)
           if (activePlayer && activePlayer.coins < 5) {
             const sectorsWithStock = Object.entries(activePlayer.portfolio)
-              .filter(([_, amount]) => amount > 0);
+              .filter(([_, amount]) => (amount as number) > 0);
             if (sectorsWithStock.length > 0) {
               sellStock(activePlayerId, sectorsWithStock[0][0] as Sector, 1);
+              // Small extra delay after selling before finishing turn
+              setTimeout(useGameStore.getState().nextTurn, 1000);
               return;
             }
           }
           // Finish turn
-          resolveEconomy();
-        }, 2000);
+          useGameStore.getState().nextTurn();
+        }, 1500);
         return () => clearTimeout(timer);
       }
     }
@@ -224,6 +227,7 @@ export default function StocklabPage() {
 
       <BiddingModal />
       <ChoiceModal />
+      <EconomyModal />
 
       {/* Rules Modal */}
       {showRules && (
