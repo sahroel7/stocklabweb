@@ -1,7 +1,7 @@
 import React from 'react';
 import { useGameStore } from '@/lib/store';
 import { ActionCard } from '@/lib/types';
-import { MousePointer2 } from 'lucide-react';
+import { MousePointer2, Zap, Info } from 'lucide-react';
 
 const sectorColors: Record<string, string> = {
   Keuangan: 'text-yellow-400 border-yellow-500/30',
@@ -29,17 +29,23 @@ export const ActionTable: React.FC = () => {
   if (phase !== 'ACTION') return null;
 
   return (
-    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex justify-between items-center bg-zinc-900 p-6 rounded-[2rem] border border-white/5 shadow-2xl">
         <div>
-          <h2 className="text-xl font-black uppercase tracking-tighter text-white">Bursa Aksi</h2>
-          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Pilih 1 kartu untuk giliranmu</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-xl font-black uppercase tracking-tighter text-white">Bursa Aksi</h2>
+          </div>
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Pilih kartu untuk portofolio atau aksi</p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/30">
-          <div className={`w-2 h-2 rounded-full animate-pulse ${isUserTurn ? 'bg-green-500' : 'bg-yellow-500'}`} />
-          <span className="text-sm font-black uppercase tracking-widest text-white">
-            Giliran: <span className={isUserTurn ? 'text-green-400' : 'text-yellow-400'}>{activePlayer?.name}</span>
-          </span>
+        <div className="flex items-center gap-4 px-6 py-3 bg-white/5 rounded-2xl border border-white/10">
+          <div className={`w-3 h-3 rounded-full animate-pulse ${isUserTurn ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.6)]' : 'bg-amber-500'}`} />
+          <div className="flex flex-col">
+            <span className="text-[8px] font-black uppercase tracking-widest text-white/40">Active Investor</span>
+            <span className={`text-sm font-black uppercase tracking-tighter ${isUserTurn ? 'text-green-400' : 'text-amber-400'}`}>
+              {activePlayer?.name}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -47,24 +53,52 @@ export const ActionTable: React.FC = () => {
         {marketCards.map((card) => {
           const canClick = isUserTurn;
           return (
-            <div 
+            <button 
               key={card.id} 
-              className={`group relative ${sectorBg[card.sector]} ${canClick ? 'hover:bg-white/10 cursor-pointer active:scale-95' : 'opacity-50 cursor-not-allowed'} border ${sectorColors[card.sector]} p-4 rounded-xl transition-all overflow-hidden`}
+              disabled={!canClick}
+              className={`group relative flex flex-col h-64 ${card.color} border-2 border-white/10 rounded-2xl transition-all overflow-hidden ${canClick ? 'hover:scale-[1.02] hover:shadow-2xl hover:border-white/30 cursor-pointer active:scale-95' : 'opacity-40 grayscale-[0.5] cursor-not-allowed'}`}
               onClick={() => canClick && takeActionCard(activePlayerId, card.id)}
             >
+              {/* Card Header */}
+              <div className="bg-black/20 p-3 flex justify-between items-center border-b border-white/10">
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/60">{card.sector}</span>
+                <Info className="w-3 h-3 text-white/40" />
+              </div>
+
+              {/* Card Body */}
+              <div className="flex-1 p-4 flex flex-col items-center justify-center text-center space-y-3">
+                <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                   <Zap className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="text-xs font-black uppercase tracking-tighter leading-tight text-white drop-shadow-md">
+                  {card.title}
+                </h4>
+              </div>
+
+              {/* Card Footer / Description */}
+              <div className="bg-white/10 p-4 min-h-[80px] flex items-center justify-center border-t border-white/5">
+                <p className="text-[10px] text-white/90 leading-tight font-bold italic drop-shadow-sm">
+                  "{card.description}"
+                </p>
+              </div>
+
+              {/* Hover Effect */}
               {canClick && (
-                <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <MousePointer2 className="w-4 h-4 text-white" />
+                <div className="absolute inset-0 bg-white/0 group-hover:bg-white/5 transition-colors flex items-center justify-center">
+                  <div className="p-2 bg-white text-black rounded-full opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
+                    <MousePointer2 className="w-4 h-4" />
+                  </div>
                 </div>
               )}
-              <h4 className={`text-[10px] font-black uppercase tracking-widest mb-2 ${sectorColors[card.sector]}`}>{card.title}</h4>
-              <p className="text-[11px] text-white/80 leading-relaxed font-medium">{card.description}</p>
-            </div>
+            </button>
           );
         })}
         {marketCards.length === 0 && (
-          <div className="col-span-full py-12 text-center border-2 border-dashed border-white/5 rounded-2xl text-white/20 font-medium">
-            Semua kartu telah diambil.
+          <div className="col-span-full py-20 text-center border-4 border-dashed border-white/5 rounded-[2.5rem] flex flex-col items-center gap-4">
+            <div className="p-4 bg-white/5 rounded-full">
+              <Zap className="w-8 h-8 text-white/10" />
+            </div>
+            <p className="text-white/20 font-black uppercase tracking-[0.3em]">Bursa Aksi Kosong</p>
           </div>
         )}
       </div>

@@ -19,7 +19,11 @@ export type ActionType =
   | 'DIVIDEN' 
   | 'PAJAK' 
   | 'SUSPEND' 
-  | 'RIGHT_ISSUE';
+  | 'RIGHT_ISSUE'
+  | 'QUICKBOY'
+  | 'AKUISISI'
+  | 'TRADING_FEE'
+  | 'STOCK_SPLIT';
 
 export interface ActionCard {
   id: string;
@@ -27,6 +31,7 @@ export interface ActionCard {
   sector: Exclude<Sector, 'Reksadana'>;
   title: string;
   description: string;
+  color: string; // To match physical card colors
 }
 
 export interface EconomyCard {
@@ -63,5 +68,7 @@ export interface GameState {
     playerId: number;
     card: ActionCard;
   } | null;
+  extraTurns: number; // For Quickboy effect
+  tradingFeeOwners: Record<Exclude<Sector, 'Reksadana'>, number | null>; // sector -> playerId
   logs: string[];
 }
