@@ -4,19 +4,19 @@ import { ActionCard } from '@/lib/types';
 import { MousePointer2, Zap, Info } from 'lucide-react';
 
 const sectorColors: Record<string, string> = {
-  Keuangan: 'text-yellow-400 border-yellow-500/30',
-  Perkebunan: 'text-green-400 border-green-500/30',
-  Pertambangan: 'text-gray-400 border-gray-500/30',
-  Properti: 'text-red-400 border-red-500/30',
-  Reksadana: 'text-blue-400 border-blue-500/30',
+  Keuangan: 'text-purple-400 border-purple-500/30',
+  Pertanian: 'text-green-400 border-green-500/30',
+  Pertambangan: 'text-red-400 border-red-500/30',
+  Properti: 'text-blue-400 border-blue-500/30',
+  Reksadana: 'text-indigo-400 border-indigo-500/30',
 };
 
 const sectorBg: Record<string, string> = {
-  Keuangan: 'bg-yellow-500/10',
-  Perkebunan: 'bg-green-500/10',
-  Pertambangan: 'bg-gray-500/10',
-  Properti: 'bg-red-500/10',
-  Reksadana: 'bg-blue-500/10',
+  Keuangan: 'bg-purple-500/10',
+  Pertanian: 'bg-green-500/10',
+  Pertambangan: 'bg-red-500/10',
+  Properti: 'bg-blue-500/10',
+  Reksadana: 'bg-indigo-500/10',
 };
 
 export const ActionTable: React.FC = () => {

@@ -4,11 +4,11 @@ import { Sector } from '@/lib/types';
 import { Lock } from 'lucide-react';
 
 const sectorColors: Record<Sector, string> = {
-  Keuangan: 'bg-yellow-500',
-  Perkebunan: 'bg-green-600',
-  Pertambangan: 'bg-gray-800',
-  Properti: 'bg-red-500',
-  Reksadana: 'bg-blue-500',
+  Keuangan: 'bg-purple-600',
+  Pertanian: 'bg-green-600',
+  Pertambangan: 'bg-red-600',
+  Properti: 'bg-blue-600',
+  Reksadana: 'bg-gray-500',
 };
 
 export const MarketBoard: React.FC = () => {

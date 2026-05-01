@@ -8,7 +8,7 @@ export const EconomyModal: React.FC = () => {
 
   if (phase !== 'ECONOMY' || !currentEconomyCards) return null;
 
-  const { sectors, event } = currentEconomyCards;
+  const { sectors } = currentEconomyCards;
 
   const getCardIcon = (card: EconomyCard) => {
     if (card.color === 'PURPLE') {
@@ -46,22 +46,6 @@ export const EconomyModal: React.FC = () => {
           <h2 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500">Fase Ekonomi</h2>
           <p className="text-3xl font-bold text-white tracking-tight">Sentimen Pasar Ronde Ini</p>
         </div>
-
-        {/* Global Event */}
-        {event && (
-          <div className="bg-indigo-600/10 border border-indigo-500/30 p-5 rounded-[2rem] space-y-3 animate-in slide-in-from-top-4 duration-700">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-900/40">
-                <Zap className="text-white w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-indigo-400 font-black uppercase tracking-widest text-[10px]">Peristiwa Global</h4>
-                <p className="text-lg font-bold text-white">{event.title}</p>
-              </div>
-            </div>
-            <p className="text-white/60 text-xs leading-relaxed italic">"{event.description}"</p>
-          </div>
-        )}
 
         {/* Sector Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

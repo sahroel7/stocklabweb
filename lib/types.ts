@@ -1,4 +1,4 @@
-export type Sector = 'Keuangan' | 'Perkebunan' | 'Pertambangan' | 'Properti' | 'Reksadana';
+export type Sector = 'Keuangan' | 'Pertanian' | 'Pertambangan' | 'Properti' | 'Reksadana';
 
 export type Phase = 'BIDDING' | 'ACTION' | 'SELLING' | 'ECONOMY' | 'END';
 
@@ -14,16 +14,10 @@ export interface Player {
 
 export type ActionType = 
   | 'INFO_BURSA' 
-  | 'RUMOR_POSITIF' 
-  | 'RUMOR_NEGATIF' 
-  | 'DIVIDEN' 
-  | 'PAJAK' 
-  | 'SUSPEND' 
-  | 'RIGHT_ISSUE'
-  | 'QUICKBOY'
+  | 'RUMOR' 
+  | 'QUICKBUY'
   | 'AKUISISI'
-  | 'TRADING_FEE'
-  | 'STOCK_SPLIT';
+  | 'TRADING_FEE';
 
 export interface ActionCard {
   id: string;
@@ -31,7 +25,7 @@ export interface ActionCard {
   sector: Exclude<Sector, 'Reksadana'>;
   title: string;
   description: string;
-  color: string; // To match physical card colors
+  color: string; // To match physical card colors (sector-based)
 }
 
 export type EconomyColor = 'GREEN' | 'RED' | 'BLUE' | 'PURPLE';
@@ -58,14 +52,6 @@ export interface EconomyCard {
   description: string;
 }
 
-export type GlobalEventType = 'KRISIS_GLOBAL' | 'EKONOMI_BOOM' | 'SUKU_BUNGA' | 'STABIL';
-
-export interface GlobalEvent {
-  type: GlobalEventType;
-  title: string;
-  description: string;
-}
-
 export interface GameState {
   round: number;
   phase: Phase;
@@ -75,10 +61,8 @@ export interface GameState {
   activePlayerIndex: number; // Index in turnOrder
   actionDeck: ActionCard[];
   economyDeck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]>;
-  eventDeck: GlobalEvent[];
   currentEconomyCards: {
     sectors: Record<Exclude<Sector, 'Reksadana'>, EconomyCard>;
-    event: GlobalEvent | null;
   } | null;
   marketCards: ActionCard[];
   currentBids: Record<number, number>; // playerId -> bid amount
@@ -87,7 +71,15 @@ export interface GameState {
     playerId: number;
     card: ActionCard;
   } | null;
-  extraTurns: number; // For Quickboy effect
+  extraTurns: number; // For Quickbuy effect
   tradingFeeOwners: Record<Exclude<Sector, 'Reksadana'>, number | null>; // sector -> playerId
   logs: string[];
+  
+  // New Interaction fields
+  interaction: {
+    type: 'SELECT_SECTOR' | 'SELECT_PLAYER' | 'SELECT_STOCK' | 'RUMOR_CHOICE';
+    count: number;
+    data?: any;
+  } | null;
+  peekResults: { sector: Sector; card: EconomyCard }[] | null;
 }

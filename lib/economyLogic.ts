@@ -1,12 +1,12 @@
 import { EconomyCard, Sector, Player, EconomyEffectType, GameState } from './types';
 
 export const INITIAL_PRICE = 5;
-const SECTORS: Exclude<Sector, 'Reksadana'>[] = ['Keuangan', 'Perkebunan', 'Pertambangan', 'Properti'];
+const SECTORS: Exclude<Sector, 'Reksadana'>[] = ['Keuangan', 'Pertanian', 'Pertambangan', 'Properti'];
 
 export const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> => {
   const deck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> = {
     Keuangan: [],
-    Perkebunan: [],
+    Pertanian: [],
     Pertambangan: [],
     Properti: []
   };
@@ -71,32 +71,11 @@ export const applyEconomyPhase = (
   players: Player[],
   currentEconomyCards: Record<Exclude<Sector, 'Reksadana'>, EconomyCard>,
   turnOrder: number[],
-  suspendedSectors: Exclude<Sector, 'Reksadana'>[],
-  event: any | null // GlobalEvent
+  suspendedSectors: Exclude<Sector, 'Reksadana'>[]
 ) => {
   let newMarket = { ...market };
   let newPlayers = [...players];
   const logMsgs: string[] = [];
-
-  // 0. Handle Global Event first (if any)
-  if (event) {
-    logMsgs.push(`PERISTIWA GLOBAL: ${event.title} - ${event.description}`);
-    switch (event.type) {
-      case 'KRISIS_GLOBAL':
-        SECTORS.forEach(s => {
-          newMarket[s] = Math.max(0, newMarket[s] - 1);
-        });
-        break;
-      case 'EKONOMI_BOOM':
-        SECTORS.forEach(s => {
-          newMarket[s] = Math.min(15, newMarket[s] + 1);
-        });
-        break;
-      case 'SUKU_BUNGA':
-        // Stabil
-        break;
-    }
-  }
 
   const cards = Object.values(currentEconomyCards);
 
@@ -230,7 +209,7 @@ export const applyEconomyPhase = (
   }
 
   // Handle Reksadana (Average of others)
-  const totalSectors = newMarket.Keuangan + newMarket.Perkebunan + newMarket.Pertambangan + newMarket.Properti;
+  const totalSectors = newMarket.Keuangan + newMarket.Pertanian + newMarket.Pertambangan + newMarket.Properti;
   newMarket.Reksadana = Math.floor(totalSectors / 4);
 
   // Handle Stock Split (>12) and Crash (<2) - Original rules still apply

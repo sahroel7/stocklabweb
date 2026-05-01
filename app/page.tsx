@@ -10,6 +10,7 @@ import { BiddingModal } from '@/components/game/BiddingModal';
 import { ChoiceModal } from '@/components/game/ChoiceModal';
 import { EconomyModal } from '@/components/game/EconomyModal';
 import { PlayerSection } from '@/components/game/PlayerSection';
+import { InteractionOverlay } from '@/components/game/InteractionOverlay';
 import { Trophy, RefreshCcw, Info, HelpCircle, X } from 'lucide-react';
 
 export default function StocklabPage() {
@@ -26,6 +27,7 @@ export default function StocklabPage() {
     takeActionCard, 
     pendingAction, 
     handleChoice,
+    interaction,
     drawMarketCards,
     submitBid,
     resolveBidding,
@@ -59,7 +61,7 @@ export default function StocklabPage() {
     }
 
     // 2. ACTION PHASE AUTOMATION
-    if (phase === 'ACTION' && activePlayerId !== undefined && activePlayerId !== 0) {
+    if (phase === 'ACTION' && activePlayerId !== undefined && activePlayerId !== 0 && !interaction) {
       const bot = players.find(p => p.id === activePlayerId);
       if (!bot) return;
 
@@ -228,6 +230,7 @@ export default function StocklabPage() {
       <BiddingModal />
       <ChoiceModal />
       <EconomyModal />
+      <InteractionOverlay />
 
       {/* Rules Modal */}
       {showRules && (
