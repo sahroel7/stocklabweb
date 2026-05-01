@@ -113,6 +113,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       .sort((a, b) => b.amount - a.amount || a.id - b.id)
       .map(b => b.id);
 
+    const deck = [...state.actionDeck];
+    const numCards = NUM_PLAYERS * 2;
+    const drawn = deck.splice(0, numCards);
+
     return {
       players: newPlayers,
       turnOrder: sortedOrder,
@@ -120,7 +124,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       phase: 'ACTION',
       currentBids: {},
       suspendedSectors: [],
-      logs: [`Bidding resolved. Turn order: ${sortedOrder.map(id => state.players.find(p => p.id === id)?.name).join(', ')}`, ...state.logs]
+      actionDeck: deck,
+      marketCards: drawn,
+      logs: [`Bidding selesai. Urutan jalan: ${sortedOrder.map(id => state.players.find(p => p.id === id)?.name).join(', ')}`, ...state.logs]
     };
   }),
 
@@ -147,7 +153,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   }),
 
   handleChoice: (choice) => {
-    const { pendingAction, executeActionEffect, players, market, addLog } = get();
+    const { pendingAction, executeActionEffect, players, market } = get();
     if (!pendingAction) return;
 
     const { playerId, card } = pendingAction;
