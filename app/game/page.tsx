@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useGameStore } from '@/lib/store';
+import { Sector } from '@/lib/types';
 import { MarketBoard } from '@/components/game/MarketBoard';
 import { GameLog } from '@/components/game/GameLog';
 import { ActionTable } from '@/components/game/ActionTable';
@@ -66,23 +67,19 @@ export default function StocklabPage() {
           if (pendingAction.playerId === activePlayerId) {
             // Bot Decision Logic
             const { card } = pendingAction;
-            const currentHoldings = bot.portfolio[card.sector];
+            const currentHoldings = bot.portfolio[card.sector as keyof typeof bot.portfolio];
             
             // Priority 1: Sell if coins are very low
-            if (bot.coins < 5) {
+            if (bot.coins < 3) {
               handleChoice('SELL');
             }
             // Priority 2: Convert to share if holdings are low
-            else if (currentHoldings < 2) {
+            else if (currentHoldings < 3) {
               handleChoice('SHARE');
             } 
-            // Priority 3: Use Action for market manipulation
+            // Priority 3: Use Action
             else {
-              let rumorDir = 2;
-              if (card.type === 'RUMOR' || card.type === 'MARKET_BOOM_CRASH') {
-                rumorDir = currentHoldings > 3 ? 2 : -2;
-              }
-              handleChoice('ACTION', rumorDir);
+              handleChoice('ACTION');
             }
           }
         } else if (marketCards.length > 0) {
@@ -103,7 +100,7 @@ export default function StocklabPage() {
             const sectorsWithStock = Object.entries(activePlayer.portfolio)
               .filter(([_, amount]) => amount > 0);
             if (sectorsWithStock.length > 0) {
-              sellStock(activePlayerId, sectorsWithStock[0][0] as any, 1);
+              sellStock(activePlayerId, sectorsWithStock[0][0] as Sector, 1);
               return;
             }
           }
@@ -118,8 +115,9 @@ export default function StocklabPage() {
   const calculateScore = (player: typeof players[0]) => {
     let total = player.coins;
     Object.entries(player.portfolio).forEach(([sector, amount]) => {
-      total += amount * market[sector as keyof typeof market];
+      total += (amount as number) * (market[sector as keyof typeof market] || 0);
     });
+    total += player.reksadana * (market['Reksadana'] || 0);
     total -= (player.debt > 0 ? 13 : 0);
     return total;
   };
@@ -291,3 +289,6 @@ export default function StocklabPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}

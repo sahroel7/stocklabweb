@@ -4,23 +4,23 @@ import { ActionCard } from '@/lib/types';
 import { MousePointer2 } from 'lucide-react';
 
 const sectorColors: Record<string, string> = {
-  Agri: 'text-green-400 border-green-500/30',
-  Mining: 'text-gray-400 border-gray-500/30',
-  Consumer: 'text-red-400 border-red-500/30',
-  Financial: 'text-yellow-400 border-yellow-500/30',
-  MutualFund: 'text-blue-400 border-blue-500/30',
+  Keuangan: 'text-yellow-400 border-yellow-500/30',
+  Perkebunan: 'text-green-400 border-green-500/30',
+  Pertambangan: 'text-gray-400 border-gray-500/30',
+  Properti: 'text-red-400 border-red-500/30',
+  Reksadana: 'text-blue-400 border-blue-500/30',
 };
 
 const sectorBg: Record<string, string> = {
-  Agri: 'bg-green-500/10',
-  Mining: 'bg-gray-500/10',
-  Consumer: 'bg-red-500/10',
-  Financial: 'bg-yellow-500/10',
-  MutualFund: 'bg-blue-500/10',
+  Keuangan: 'bg-yellow-500/10',
+  Perkebunan: 'bg-green-500/10',
+  Pertambangan: 'bg-gray-500/10',
+  Properti: 'bg-red-500/10',
+  Reksadana: 'bg-blue-500/10',
 };
 
 export const ActionTable: React.FC = () => {
-  const { marketCards, phase, drawMarketCards, takeActionCard, turnOrder, activePlayerIndex } = useGameStore();
+  const { marketCards, phase, drawMarketCards, takeActionCard, turnOrder, activePlayerIndex, players } = useGameStore();
 
   const activePlayerId = turnOrder[activePlayerIndex];
 
@@ -35,7 +35,7 @@ export const ActionTable: React.FC = () => {
             onClick={drawMarketCards}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors font-medium shadow-lg"
           >
-            Draw 10 Cards
+            Buka {players.length * 2} Kartu
           </button>
         )}
       </div>

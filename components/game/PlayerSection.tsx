@@ -14,11 +14,17 @@ export const PlayerSection: React.FC = () => {
     Object.entries(p.portfolio).forEach(([sector, amount]) => {
       total += amount * (market[sector as Sector] || 0);
     });
+    total += p.reksadana * (market['Reksadana'] || 0);
     total -= (p.debt > 0 ? 13 : 0);
     return total;
   };
 
   const sortedPlayers = [...players].sort((a, b) => calculateNetWorth(b) - calculateNetWorth(a));
+
+  const portfolioEntries = activePlayer ? [
+    ...Object.entries(activePlayer.portfolio),
+    ['Reksadana', activePlayer.reksadana]
+  ] : [];
 
   return (
     <div className="space-y-6">
@@ -77,7 +83,7 @@ export const PlayerSection: React.FC = () => {
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1 text-indigo-400 font-bold">
                   <Briefcase className="w-4 h-4" />
-                  <span>{Object.values(activePlayer?.portfolio || {}).reduce((a, b) => a + b, 0)}</span>
+                  <span>{Object.values(activePlayer?.portfolio || {}).reduce((a, b) => a + b, 0) + (activePlayer?.reksadana || 0)}</span>
                 </div>
                 <span className="text-[10px] text-white/30 uppercase">Shares</span>
               </div>
@@ -96,14 +102,14 @@ export const PlayerSection: React.FC = () => {
             <div>
               <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4">Portfolio</h4>
               <div className="space-y-2">
-                {activePlayer && (Object.entries(activePlayer.portfolio) as [Sector, number][]).map(([sector, amount]) => (
+                {portfolioEntries.map(([sector, amount]) => (
                   <div key={sector} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
                     <span className="text-sm text-white/80">{sector}</span>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-white">{amount} <span className="text-white/20 text-[10px]">Lbr</span></span>
-                      {phase === 'SELLING' && amount > 0 && activePlayer.id === 0 && (
+                      {phase === 'SELLING' && (amount as number) > 0 && activePlayer?.id === 0 && (
                         <button 
-                          onClick={() => sellStock(activePlayer.id, sector, 1)}
+                          onClick={() => sellStock(activePlayer.id, sector as Sector, 1)}
                           className="text-[10px] px-2 py-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-500/30 rounded uppercase font-bold transition-all"
                         >
                           Sell 1
@@ -118,7 +124,7 @@ export const PlayerSection: React.FC = () => {
             <div className="flex flex-col justify-center items-center gap-4">
                {phase === 'ACTION' && activePlayerId === 0 && (
                  <div className="text-center">
-                   <p className="text-white/40 text-sm italic mb-4">Pilih 2 kartu dari Bursa Aksi untuk menyelesaikan giliranmu.</p>
+                   <p className="text-white/40 text-sm italic mb-4">Ambil 1 kartu dari Bursa Aksi secara bergiliran.</p>
                  </div>
                )}
                {phase === 'ACTION' && activePlayerId !== 0 && (
