@@ -4,20 +4,21 @@ import { ActionCard } from '@/lib/types';
 import { MousePointer2, Zap, Info } from 'lucide-react';
 
 const sectorColors: Record<string, string> = {
-  Keuangan: 'text-purple-400 border-purple-500/30',
-  Pertanian: 'text-green-400 border-green-500/30',
-  Pertambangan: 'text-red-400 border-red-500/30',
-  Properti: 'text-blue-400 border-blue-500/30',
-  Reksadana: 'text-indigo-400 border-indigo-500/30',
-};
+  Keuangan: 'text-yellow-400 border-yellow-500/30',
+  Agrikultur: 'text-green-400 border-green-500/30',
+  Tambang: 'text-red-400 border-red-500/30',
+  Konsumer: 'text-blue-400 border-blue-500/30',
+  'Reksa Dana': 'text-indigo-400 border-indigo-500/30',
+  };
 
-const sectorBg: Record<string, string> = {
-  Keuangan: 'bg-purple-500/10',
-  Pertanian: 'bg-green-500/10',
-  Pertambangan: 'bg-red-500/10',
-  Properti: 'bg-blue-500/10',
-  Reksadana: 'bg-indigo-500/10',
-};
+  const sectorBgColors: Record<Sector, string> = {
+  Keuangan: 'bg-yellow-500/10',
+  Agrikultur: 'bg-green-500/10',
+  Tambang: 'bg-red-500/10',
+  Konsumer: 'bg-blue-500/10',
+  'Reksa Dana': 'bg-indigo-500/10',
+  };
+
 
 export const ActionTable: React.FC = () => {
   const { marketCards, phase, takeActionCard, turnOrder, activePlayerIndex, players } = useGameStore();
@@ -61,7 +62,9 @@ export const ActionTable: React.FC = () => {
             >
               {/* Card Header */}
               <div className="bg-black/20 p-3 flex justify-between items-center border-b border-white/10">
-                <span className="text-[8px] font-black uppercase tracking-widest text-white/60">{card.sector}</span>
+                <span className="text-[8px] font-black uppercase tracking-widest text-white/60">
+                  {card.sector === 'Reksa Dana' ? card.sector : `Saham ${card.sector}`}
+                </span>
                 <Info className="w-3 h-3 text-white/40" />
               </div>
 

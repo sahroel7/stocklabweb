@@ -1,14 +1,14 @@
 import { EconomyCard, Sector, Player, EconomyEffectType, GameState } from './types';
 
 export const INITIAL_PRICE = 5;
-const SECTORS: Exclude<Sector, 'Reksadana'>[] = ['Keuangan', 'Pertanian', 'Pertambangan', 'Properti'];
+const SECTORS: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
 
-export const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> => {
-  const deck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]> = {
+export const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard[]> => {
+  const deck: Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard[]> = {
     Keuangan: [],
-    Pertanian: [],
-    Pertambangan: [],
-    Properti: []
+    Agrikultur: [],
+    Tambang: [],
+    Konsumer: []
   };
 
   SECTORS.forEach(sector => {
@@ -69,9 +69,9 @@ export const generateEconomyDeck = (): Record<Exclude<Sector, 'Reksadana'>, Econ
 export const applyEconomyPhase = (
   market: Record<Sector, number>,
   players: Player[],
-  currentEconomyCards: Record<Exclude<Sector, 'Reksadana'>, EconomyCard>,
+  currentEconomyCards: Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>,
   turnOrder: number[],
-  suspendedSectors: Exclude<Sector, 'Reksadana'>[]
+  suspendedSectors: Exclude<Sector, 'Reksa Dana'>[]
 ) => {
   let newMarket = { ...market };
   let newPlayers = [...players];
@@ -208,9 +208,9 @@ export const applyEconomyPhase = (
     }
   }
 
-  // Handle Reksadana (Average of others)
-  const totalSectors = newMarket.Keuangan + newMarket.Pertanian + newMarket.Pertambangan + newMarket.Properti;
-  newMarket.Reksadana = Math.floor(totalSectors / 4);
+  // Handle Reksa Dana (Average of others)
+  const totalSectors = newMarket.Keuangan + newMarket.Agrikultur + newMarket.Tambang + newMarket.Konsumer;
+  newMarket['Reksa Dana'] = Math.floor(totalSectors / 4);
 
   // Handle Stock Split (>12) and Crash (<2) - Original rules still apply
   SECTORS.forEach(s => {

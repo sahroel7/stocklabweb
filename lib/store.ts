@@ -5,7 +5,7 @@ import { generateEconomyDeck, applyEconomyPhase, INITIAL_PRICE } from './economy
 const TOTAL_ROUNDS = 6;
 const NUM_PLAYERS = 5;
 
-const SECTORS: Exclude<Sector, 'Reksadana'>[] = ['Keuangan', 'Pertanian', 'Pertambangan', 'Properti'];
+const SECTORS: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
 
 const generateActionDeck = (): ActionCard[] => {
   const types: ActionType[] = [
@@ -45,12 +45,12 @@ const getCardTitle = (type: ActionType, sector: string): string => {
   }
 };
 
-const getSectorColor = (sector: Exclude<Sector, 'Reksadana'>): string => {
+const getSectorColor = (sector: Exclude<Sector, 'Reksa Dana'>): string => {
   switch (sector) {
-    case 'Pertambangan': return 'bg-red-600';
-    case 'Pertanian': return 'bg-green-600';
-    case 'Properti': return 'bg-blue-600';
-    case 'Keuangan': return 'bg-purple-600';
+    case 'Tambang': return 'bg-red-600';
+    case 'Agrikultur': return 'bg-green-600';
+    case 'Konsumer': return 'bg-blue-600';
+    case 'Keuangan': return 'bg-yellow-600';
     default: return 'bg-zinc-600';
   }
 };
@@ -93,12 +93,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     id: i,
     name: i === 0 ? 'You' : `Bot ${i}`,
     coins: 15,
-    portfolio: { Keuangan: 0, Pertanian: 0, Pertambangan: 0, Properti: 0 },
-    reksadana: 0,
+    portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
+    reksaDana: 0,
     debt: 0,
     isBankrupt: false,
   })),
-  market: { Keuangan: INITIAL_PRICE, Pertanian: INITIAL_PRICE, Pertambangan: INITIAL_PRICE, Properti: INITIAL_PRICE, Reksadana: INITIAL_PRICE },
+  market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
   turnOrder: [],
   activePlayerIndex: 0,
   actionDeck: generateActionDeck(),
@@ -109,7 +109,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   suspendedSectors: [],
   pendingAction: null,
   extraTurns: 0,
-  tradingFeeOwners: { Keuangan: null, Pertanian: null, Pertambangan: null, Properti: null },
+  tradingFeeOwners: { Keuangan: null, Agrikultur: null, Tambang: null, Konsumer: null },
   logs: ['Game started! Round 1: Bidding Phase.'],
   interaction: null,
   peekResults: null,
@@ -199,7 +199,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
           portfolio: { ...p.portfolio, [card.sector]: p.portfolio[card.sector] + 1 }
         } : p),
         pendingAction: null,
-        logs: [`${player.name} menyimpan ${card.title} sebagai saham. ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+        logs: [`${player.name} menyimpan Saham ${card.sector} (${card.title}) sebagai saham. ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
       }));
       get().nextTurn();
     } else if (choice === 'SELL') {
@@ -210,7 +210,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
           coins: p.coins + price
         } : p),
         pendingAction: null,
-        logs: [`${player.name} menjual ${card.title} langsung seharga ${price} koin.`, ...state.logs]
+        logs: [`${player.name} menjual Saham ${card.sector} (${card.title}) langsung seharga ${price} koin.`, ...state.logs]
       }));
       get().nextTurn();
     } else {
@@ -317,7 +317,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const { economyDeck, round, players } = get();
     const results = sectors.map(s => ({
       sector: s,
-      card: economyDeck[s as Exclude<Sector, 'Reksadana'>][round - 1]
+      card: economyDeck[s as Exclude<Sector, 'Reksa Dana'>][round - 1]
     }));
 
     set((state) => ({
@@ -349,7 +349,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
   handleAkuisisiResponse: (playerId, targetId) => {
     const { players, market, pendingAction } = get();
-    const sector = pendingAction?.card.sector as Exclude<Sector, 'Reksadana'>;
+    const sector = pendingAction?.card.sector as Exclude<Sector, 'Reksa Dana'>;
     const target = players.find(p => p.id === targetId);
     
     if (target && sector) {
@@ -362,7 +362,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         }),
         interaction: null,
         pendingAction: null,
-        logs: [`${state.players.find(p => p.id === playerId)?.name} mengakuisisi 1 saham ${sector} dari ${target.name}.`, ...state.logs]
+        logs: [`${state.players.find(p => p.id === playerId)?.name} mengakuisisi 1 Saham ${sector} dari ${target.name}.`, ...state.logs]
       }));
     } else {
       set({ interaction: null, pendingAction: null });
@@ -381,10 +381,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     
     const newPlayers = state.players.map(p => {
       if (p.id === playerId) {
-        if (sector === 'Reksadana') {
-          return { ...p, coins: p.coins + actualGain, reksadana: p.reksadana - amount };
+        if (sector === 'Reksa Dana') {
+          return { ...p, coins: p.coins + actualGain, reksaDana: p.reksaDana - amount };
         }
-        const s = sector as Exclude<Sector, 'Reksadana'>;
+        const s = sector as Exclude<Sector, 'Reksa Dana'>;
         return { ...p, coins: p.coins + actualGain, portfolio: { ...p.portfolio, [s]: p.portfolio[s] - amount } };
       }
       return p;
@@ -401,7 +401,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       players: newPlayers, 
       interaction: isInteraction ? null : state.interaction,
       pendingAction: isInteraction ? null : state.pendingAction,
-      logs: [`${player.name} menjual ${amount} ${sector}.`, ...state.logs] 
+      logs: [`${player.name} menjual ${amount} ${sector === 'Reksa Dana' ? sector : `Saham ${sector}`}.`, ...state.logs] 
     };
   }),
 
@@ -460,7 +460,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const { newMarket, newPlayers, logMsgs } = applyEconomyPhase(
       state.market,
       state.players,
-      sectors as Record<Exclude<Sector, 'Reksadana'>, EconomyCard>,
+      sectors as Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>,
       state.turnOrder,
       state.suspendedSectors
     );
@@ -494,12 +494,12 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       id: i,
       name: i === 0 ? 'You' : `Bot ${i}`,
       coins: 15,
-      portfolio: { Keuangan: 0, Pertanian: 0, Pertambangan: 0, Properti: 0 },
-      reksadana: 0,
+      portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
+      reksaDana: 0,
       debt: 0,
       isBankrupt: false,
     })),
-    market: { Keuangan: INITIAL_PRICE, Pertanian: INITIAL_PRICE, Pertambangan: INITIAL_PRICE, Properti: INITIAL_PRICE, Reksadana: INITIAL_PRICE },
+    market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
     turnOrder: [],
     activePlayerIndex: 0,
     actionDeck: generateActionDeck(),
@@ -510,7 +510,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     suspendedSectors: [],
     pendingAction: null,
     extraTurns: 0,
-    tradingFeeOwners: { Keuangan: null, Pertanian: null, Pertambangan: null, Properti: null },
+    tradingFeeOwners: { Keuangan: null, Agrikultur: null, Tambang: null, Konsumer: null },
     logs: ['Game dimuat ulang! Ronde 1: Fase Lelang (Bidding).'],
   }),
 }));

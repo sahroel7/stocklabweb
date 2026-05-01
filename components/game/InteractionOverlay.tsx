@@ -5,7 +5,7 @@ import { useGameStore } from '@/lib/store';
 import { Sector } from '@/lib/types';
 import { Eye, TrendingUp, TrendingDown, Users, BadgeDollarSign, X, Check } from 'lucide-react';
 
-const SECTORS: Sector[] = ['Keuangan', 'Pertanian', 'Pertambangan', 'Properti'];
+const SECTORS: Sector[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
 
 export const InteractionOverlay: React.FC = () => {
   const { 
@@ -38,7 +38,7 @@ export const InteractionOverlay: React.FC = () => {
             {peekResults.map((res, i) => (
               <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">{res.sector}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Saham {res.sector}</span>
                   <Eye className="w-4 h-4 text-white/20" />
                 </div>
                 <div className="space-y-1">
@@ -87,7 +87,7 @@ export const InteractionOverlay: React.FC = () => {
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
-                  <span className="text-sm font-bold text-white">{s}</span>
+                  <span className="text-sm font-bold text-white">Saham {s}</span>
                 </button>
               ))}
             </div>
@@ -106,14 +106,14 @@ export const InteractionOverlay: React.FC = () => {
 
       case 'SELECT_PLAYER':
         const sector = interaction.data as Sector;
-        const potentialTargets = players.filter(p => p.id !== 0 && (p.portfolio[sector as Exclude<Sector, 'Reksadana'>] || 0) > 0);
+        const potentialTargets = players.filter(p => p.id !== 0 && (p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>] || 0) > 0);
         return (
           <div className="space-y-8">
             <div className="text-center space-y-2">
               <Users className="w-12 h-12 text-indigo-500 mx-auto mb-2" />
               <h2 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500">Akuisisi</h2>
               <p className="text-2xl font-bold text-white">Pilih Pemain untuk Diakuisisi</p>
-              <p className="text-xs text-white/40">Sektor: {sector}</p>
+              <p className="text-xs text-white/40">Sektor: Saham {sector}</p>
             </div>
             <div className="space-y-3">
               {potentialTargets.length > 0 ? potentialTargets.map(p => (
@@ -129,12 +129,12 @@ export const InteractionOverlay: React.FC = () => {
                     <span className="font-bold text-white">{p.name}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-white">{p.portfolio[sector as Exclude<Sector, 'Reksadana'>]} Saham</div>
+                    <div className="text-sm font-bold text-white">{p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>]} Saham</div>
                     <div className="text-[10px] text-white/40 uppercase">Kompensasi: {Math.floor(market[sector] / 2)} Koin</div>
                   </div>
                 </button>
               )) : (
-                <div className="py-10 text-center text-white/20 italic">Tidak ada pemain yang memiliki saham {sector}.</div>
+                <div className="py-10 text-center text-white/20 italic">Tidak ada pemain yang memiliki Saham {sector}.</div>
               )}
             </div>
             <button 
@@ -162,7 +162,7 @@ export const InteractionOverlay: React.FC = () => {
                   onClick={() => sellStock(0, s, count)}
                   className="w-full p-6 bg-white/5 border border-white/10 rounded-[2rem] flex justify-between items-center hover:bg-white/10 transition-all"
                 >
-                  <span className="font-bold text-white">{s}</span>
+                  <span className="font-bold text-white">Saham {s}</span>
                   <div className="text-right">
                     <div className="text-sm font-bold text-emerald-400">+{count * market[s]} Koin</div>
                     <div className="text-[10px] text-white/40 uppercase">{count} Saham @ {market[s]}</div>
@@ -189,7 +189,7 @@ export const InteractionOverlay: React.FC = () => {
               <TrendingUp className="w-12 h-12 text-blue-500 mx-auto mb-2" />
               <h2 className="text-sm font-black uppercase tracking-[0.4em] text-blue-500">Rumor</h2>
               <p className="text-2xl font-bold text-white">Tentukan Efek Rumor</p>
-              <p className="text-xs text-white/40">Sektor Utama: {rumorSector}</p>
+              <p className="text-xs text-white/40">Sektor Utama: Saham {rumorSector}</p>
             </div>
             
             <div className="grid grid-cols-1 gap-4">
@@ -201,13 +201,13 @@ export const InteractionOverlay: React.FC = () => {
                       onClick={() => useRumor(0, [{ sector: rumorSector, amount: 2 }])}
                       className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold transition-all"
                     >
-                      +2 {rumorSector}
+                      +2 Saham {rumorSector}
                     </button>
                     <button 
                       onClick={() => useRumor(0, [{ sector: rumorSector, amount: -2 }])}
                       className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-2xl font-bold transition-all"
                     >
-                      -2 {rumorSector}
+                      -2 Saham {rumorSector}
                     </button>
                  </div>
                </div>
@@ -215,7 +215,7 @@ export const InteractionOverlay: React.FC = () => {
                {/* Option 2: +/- 1 for two stocks (Simplified: card sector + choice) */}
                <div className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-4">
                  <p className="text-[10px] font-black uppercase text-white/40 tracking-widest">Opsi B: Dua Saham (+/- 1)</p>
-                 <p className="text-[10px] text-white/20 italic">Pilih satu lagi untuk diubah +/- 1 bersama {rumorSector}:</p>
+                 <p className="text-[10px] text-white/20 italic">Pilih satu lagi untuk diubah +/- 1 bersama Saham {rumorSector}:</p>
                  <div className="grid grid-cols-2 gap-2">
                    {SECTORS.filter(s => s !== rumorSector).map(s => (
                      <div key={s} className="flex gap-1">
@@ -223,13 +223,13 @@ export const InteractionOverlay: React.FC = () => {
                           onClick={() => useRumor(0, [{ sector: rumorSector, amount: 1 }, { sector: s, amount: 1 }])}
                           className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all"
                         >
-                          +1 {s}
+                          +1 Saham {s}
                         </button>
                         <button 
                           onClick={() => useRumor(0, [{ sector: rumorSector, amount: -1 }, { sector: s, amount: -1 }])}
                           className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all"
                         >
-                          -1 {s}
+                          -1 Saham {s}
                         </button>
                      </div>
                    ))}

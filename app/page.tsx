@@ -122,7 +122,7 @@ export default function StocklabPage() {
     Object.entries(player.portfolio).forEach(([sector, amount]) => {
       total += (amount as number) * (market[sector as keyof typeof market] || 0);
     });
-    total += player.reksadana * (market['Reksadana'] || 0);
+    total += player.reksaDana * (market['Reksa Dana'] || 0);
     total -= (player.debt > 0 ? 13 : 0);
     return total;
   };

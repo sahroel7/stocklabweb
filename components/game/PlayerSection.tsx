@@ -14,7 +14,7 @@ export const PlayerSection: React.FC = () => {
     Object.entries(p.portfolio).forEach(([sector, amount]) => {
       total += amount * (market[sector as Sector] || 0);
     });
-    total += p.reksadana * (market['Reksadana'] || 0);
+    total += p.reksaDana * (market['Reksa Dana'] || 0);
     total -= (p.debt > 0 ? 13 : 0);
     return total;
   };
@@ -23,7 +23,7 @@ export const PlayerSection: React.FC = () => {
 
   const portfolioEntries = activePlayer ? [
     ...Object.entries(activePlayer.portfolio),
-    ['Reksadana', activePlayer.reksadana]
+    ['Reksa Dana', activePlayer.reksaDana]
   ] : [];
 
   return (
@@ -83,7 +83,7 @@ export const PlayerSection: React.FC = () => {
               <div className="flex flex-col items-end">
                 <div className="flex items-center gap-1 text-indigo-400 font-bold">
                   <Briefcase className="w-4 h-4" />
-                  <span>{Object.values(activePlayer?.portfolio || {}).reduce((a, b) => a + b, 0) + (activePlayer?.reksadana || 0)}</span>
+                  <span>{Object.values(activePlayer?.portfolio || {}).reduce((a, b) => a + b, 0) + (activePlayer?.reksaDana || 0)}</span>
                 </div>
                 <span className="text-[10px] text-white/30 uppercase">Shares</span>
               </div>
@@ -104,7 +104,9 @@ export const PlayerSection: React.FC = () => {
               <div className="space-y-2">
                 {portfolioEntries.map(([sector, amount]) => (
                   <div key={sector} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                    <span className="text-sm text-white/80">{sector}</span>
+                    <span className="text-sm text-white/80">
+                      {sector === 'Reksa Dana' ? sector : `Saham ${sector}`}
+                    </span>
                     <div className="flex items-center gap-4">
                       <span className="font-bold text-white">{amount} <span className="text-white/20 text-[10px]">Lbr</span></span>
                       {phase === 'SELLING' && (amount as number) > 0 && activePlayer?.id === 0 && (

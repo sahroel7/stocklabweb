@@ -1,4 +1,4 @@
-export type Sector = 'Keuangan' | 'Pertanian' | 'Pertambangan' | 'Properti' | 'Reksadana';
+export type Sector = 'Keuangan' | 'Agrikultur' | 'Tambang' | 'Konsumer' | 'Reksa Dana';
 
 export type Phase = 'BIDDING' | 'ACTION' | 'SELLING' | 'ECONOMY' | 'END';
 
@@ -6,8 +6,8 @@ export interface Player {
   id: number;
   name: string;
   coins: number;
-  portfolio: Record<Exclude<Sector, 'Reksadana'>, number>;
-  reksadana: number;
+  portfolio: Record<Exclude<Sector, 'Reksa Dana'>, number>;
+  reksaDana: number;
   debt: number; // 0 or 10
   isBankrupt: boolean;
 }
@@ -22,7 +22,7 @@ export type ActionType =
 export interface ActionCard {
   id: string;
   type: ActionType;
-  sector: Exclude<Sector, 'Reksadana'>;
+  sector: Exclude<Sector, 'Reksa Dana'>;
   title: string;
   description: string;
   color: string; // To match physical card colors (sector-based)
@@ -44,7 +44,7 @@ export type EconomyEffectType =
 
 export interface EconomyCard {
   id: string;
-  sector: Exclude<Sector, 'Reksadana'>;
+  sector: Exclude<Sector, 'Reksa Dana'>;
   color: EconomyColor;
   type: EconomyEffectType;
   value: number; 
@@ -60,19 +60,19 @@ export interface GameState {
   turnOrder: number[]; // Array of player IDs
   activePlayerIndex: number; // Index in turnOrder
   actionDeck: ActionCard[];
-  economyDeck: Record<Exclude<Sector, 'Reksadana'>, EconomyCard[]>;
+  economyDeck: Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard[]>;
   currentEconomyCards: {
-    sectors: Record<Exclude<Sector, 'Reksadana'>, EconomyCard>;
+    sectors: Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>;
   } | null;
   marketCards: ActionCard[];
   currentBids: Record<number, number>; // playerId -> bid amount
-  suspendedSectors: Exclude<Sector, 'Reksadana'>[];
+  suspendedSectors: Exclude<Sector, 'Reksa Dana'>[];
   pendingAction: {
     playerId: number;
     card: ActionCard;
   } | null;
   extraTurns: number; // For Quickbuy effect
-  tradingFeeOwners: Record<Exclude<Sector, 'Reksadana'>, number | null>; // sector -> playerId
+  tradingFeeOwners: Record<Exclude<Sector, 'Reksa Dana'>, number | null>; // sector -> playerId
   logs: string[];
   
   // New Interaction fields
