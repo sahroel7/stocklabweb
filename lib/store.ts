@@ -234,32 +234,33 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         pendingAction: null,
       }));
     }
+// --- TURN MANAGEMENT ---
+set((state) => {
+  // 1. If market is empty, phase changes to SELLING immediately
+  if (state.marketCards.length === 0 && !state.pendingAction) {
+    return { 
+      activePlayerIndex: 0, 
+      phase: 'SELLING', 
+      extraTurns: 0, // Clear any remaining extra turns
+      logs: ['Semua kartu market telah diambil. Fase: PENJUALAN.', ...state.logs] 
+    };
+  }
 
-    set((state) => {
-      if (state.extraTurns > 0) {
-        return { extraTurns: state.extraTurns - 1 };
-      }
+  // 2. If player has extra turns (Quickboy), stay on same player
+  if (state.extraTurns > 0) {
+    return { extraTurns: state.extraTurns - 1 };
+  }
 
-      let nextIndex = state.activePlayerIndex + 1;
-      let nextPhase = state.phase;
+  // 3. Normal turn rotation
+  let nextIndex = state.activePlayerIndex + 1;
+  if (nextIndex >= NUM_PLAYERS) {
+    nextIndex = 0;
+  }
 
-      if (nextIndex >= NUM_PLAYERS) {
-        nextIndex = 0;
-      }
+  return { activePlayerIndex: nextIndex };
+});
+},
 
-      if (state.marketCards.length === 0 && !state.pendingAction) {
-        nextPhase = 'SELLING';
-        nextIndex = 0;
-        return { 
-          activePlayerIndex: 0, 
-          phase: 'SELLING', 
-          logs: ['Semua kartu market telah diambil. Fase: PENJUALAN.', ...state.logs] 
-        };
-      }
-
-      return { activePlayerIndex: nextIndex, phase: nextPhase };
-    });
-  },
 
   executeActionEffect: (playerId, card) => {
     const { players } = get();
@@ -281,12 +282,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
           break;
 
         case 'STOCK_SPLIT':
-          newMarket[card.sector] = 6;
           newPlayers = newPlayers.map(p => ({
             ...p,
             portfolio: { ...p.portfolio, [card.sector]: (p.portfolio[card.sector] || 0) * 2 }
           }));
-          logMsg += ` (Melakukan STOCK SPLIT pada ${card.sector}!)`;
+          logMsg += ` (Melakukan STOCK SPLIT pada ${card.sector}! Jumlah sahammu dilipatgandakan)`;
           break;
 
         case 'TRADING_FEE':

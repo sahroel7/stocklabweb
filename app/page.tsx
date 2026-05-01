@@ -113,7 +113,7 @@ export default function StocklabPage() {
         return () => clearTimeout(timer);
       }
     }
-  }, [phase, activePlayerId, pendingAction, marketCards, handleChoice, takeActionCard, players, activePlayerIndex, drawMarketCards, submitBid, resolveBidding, sellStock, resolveEconomy, activePlayer]);
+  }, [phase, activePlayerId, pendingAction, marketCards, handleChoice, takeActionCard, players, activePlayerIndex, drawMarketCards, submitBid, resolveBidding, sellStock, resolveEconomy, activePlayer, useGameStore.getState().extraTurns]);
 
   const calculateScore = (player: typeof players[0]) => {
     let total = player.coins;
