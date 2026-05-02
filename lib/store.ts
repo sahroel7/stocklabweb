@@ -259,7 +259,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
                 portfolio: { ...p.portfolio, [s]: 0 }
               } : p),
               pendingAction: null,
-              logs: [`${logMsg} (Menjual semua saham ${s} seharga ${gain} koin)`, ...state.logs]
+              logs: [`${logMsg} (Menjual semua Saham ${s} seharga ${gain} koin)`, ...state.logs]
             }));
           } else {
              set((state) => ({ pendingAction: null, logs: [`${logMsg} (Gagal: Tidak ada saham untuk dijual)`, ...state.logs] }));

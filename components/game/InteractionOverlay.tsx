@@ -38,7 +38,7 @@ export const InteractionOverlay: React.FC = () => {
             {peekResults.map((res, i) => (
               <div key={i} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Saham {res.sector}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 whitespace-nowrap">Saham {res.sector}</span>
                   <Eye className="w-4 h-4 text-white/20" />
                 </div>
                 <div className="space-y-1">
@@ -87,7 +87,7 @@ export const InteractionOverlay: React.FC = () => {
                       : 'bg-white/5 border-white/10 hover:bg-white/10'
                   }`}
                 >
-                  <span className="text-sm font-bold text-white">Saham {s}</span>
+                  <span className="text-sm font-bold text-white whitespace-nowrap">Saham {s}</span>
                 </button>
               ))}
             </div>
@@ -113,7 +113,7 @@ export const InteractionOverlay: React.FC = () => {
               <Users className="w-12 h-12 text-indigo-500 mx-auto mb-2" />
               <h2 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500">Akuisisi</h2>
               <p className="text-2xl font-bold text-white">Pilih Pemain untuk Diakuisisi</p>
-              <p className="text-xs text-white/40">Sektor: Saham {sector}</p>
+              <p className="text-xs text-white/40 whitespace-nowrap">Sektor: Saham {sector}</p>
             </div>
             <div className="space-y-3">
               {potentialTargets.length > 0 ? potentialTargets.map(p => (
@@ -129,12 +129,12 @@ export const InteractionOverlay: React.FC = () => {
                     <span className="font-bold text-white">{p.name}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-white">{p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>]} Saham</div>
-                    <div className="text-[10px] text-white/40 uppercase">Kompensasi: {Math.floor(market[sector] / 2)} Koin</div>
+                    <div className="text-sm font-bold text-white whitespace-nowrap">{p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>]} Saham</div>
+                    <div className="text-[10px] text-white/40 uppercase whitespace-nowrap">Kompensasi: {Math.floor(market[sector] / 2)} Koin</div>
                   </div>
                 </button>
               )) : (
-                <div className="py-10 text-center text-white/20 italic">Tidak ada pemain yang memiliki Saham {sector}.</div>
+                <div className="py-10 text-center text-white/20 italic whitespace-nowrap">Tidak ada pemain yang memiliki Saham {sector}.</div>
               )}
             </div>
             <button 
@@ -162,10 +162,10 @@ export const InteractionOverlay: React.FC = () => {
                   onClick={() => sellStock(0, s, count)}
                   className="w-full p-6 bg-white/5 border border-white/10 rounded-[2rem] flex justify-between items-center hover:bg-white/10 transition-all"
                 >
-                  <span className="font-bold text-white">Saham {s}</span>
+                  <span className="font-bold text-white whitespace-nowrap">Saham {s}</span>
                   <div className="text-right">
-                    <div className="text-sm font-bold text-emerald-400">+{count * market[s]} Koin</div>
-                    <div className="text-[10px] text-white/40 uppercase">{count} Saham @ {market[s]}</div>
+                    <div className="text-sm font-bold text-emerald-400 whitespace-nowrap">+{count * market[s]} Koin</div>
+                    <div className="text-[10px] text-white/40 uppercase whitespace-nowrap">{count} Saham @ {market[s]}</div>
                   </div>
                 </button>
               )) : (
@@ -189,7 +189,7 @@ export const InteractionOverlay: React.FC = () => {
               <TrendingUp className="w-12 h-12 text-blue-500 mx-auto mb-2" />
               <h2 className="text-sm font-black uppercase tracking-[0.4em] text-blue-500">Rumor</h2>
               <p className="text-2xl font-bold text-white">Tentukan Efek Rumor</p>
-              <p className="text-xs text-white/40">Sektor Utama: Saham {rumorSector}</p>
+              <p className="text-xs text-white/40 whitespace-nowrap">Sektor Utama: Saham {rumorSector}</p>
             </div>
             
             <div className="grid grid-cols-1 gap-4">
@@ -199,13 +199,13 @@ export const InteractionOverlay: React.FC = () => {
                  <div className="flex gap-2">
                     <button 
                       onClick={() => useRumor(0, [{ sector: rumorSector, amount: 2 }])}
-                      className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold transition-all"
+                      className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold transition-all whitespace-nowrap"
                     >
                       +2 Saham {rumorSector}
                     </button>
                     <button 
                       onClick={() => useRumor(0, [{ sector: rumorSector, amount: -2 }])}
-                      className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-2xl font-bold transition-all"
+                      className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-2xl font-bold transition-all whitespace-nowrap"
                     >
                       -2 Saham {rumorSector}
                     </button>
@@ -221,13 +221,13 @@ export const InteractionOverlay: React.FC = () => {
                      <div key={s} className="flex gap-1">
                         <button 
                           onClick={() => useRumor(0, [{ sector: rumorSector, amount: 1 }, { sector: s, amount: 1 }])}
-                          className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all"
+                          className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all whitespace-nowrap"
                         >
                           +1 Saham {s}
                         </button>
                         <button 
                           onClick={() => useRumor(0, [{ sector: rumorSector, amount: -1 }, { sector: s, amount: -1 }])}
-                          className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all"
+                          className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all whitespace-nowrap"
                         >
                           -1 Saham {s}
                         </button>

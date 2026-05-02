@@ -115,7 +115,7 @@ export const PlayerSection: React.FC = () => {
               <div className="space-y-1">
                 {portfolioEntries.map(([sector, amount]) => (
                   <div key={sector} className="flex justify-between items-center p-2 bg-white/5 rounded-lg border border-white/5">
-                    <span className="text-[10px] text-white/80">
+                    <span className="text-[10px] text-white/80 whitespace-nowrap">
                       {sector === 'Reksa Dana' ? sector : `Saham ${sector}`}
                     </span>
                     <div className="flex items-center gap-3">

@@ -122,22 +122,22 @@ export const applyEconomyPhase = (
     }
 
     if (suspendedSectors.includes(card.sector)) {
-      logMsgs.push(`${card.sector} SUSPEND! Efek ${card.title} diabaikan.`);
+      logMsgs.push(`Saham ${card.sector} SUSPEND! Efek ${card.title} diabaikan.`);
       continue;
     }
 
     switch (card.type) {
       case 'PRICE_CHANGE':
         newMarket[card.sector] = Math.max(0, Math.min(15, newMarket[card.sector] + card.value));
-        logMsgs.push(`${card.sector}: ${card.title} (${card.value > 0 ? '+' : ''}${card.value}) -> Harga: ${newMarket[card.sector]}`);
+        logMsgs.push(`Saham ${card.sector}: ${card.title} (${card.value > 0 ? '+' : ''}${card.value}) -> Harga: ${newMarket[card.sector]}`);
         break;
 
       case 'SIDEWAYS':
-        logMsgs.push(`${card.sector}: Sideways (Tetap) -> Harga: ${newMarket[card.sector]}`);
+        logMsgs.push(`Saham ${card.sector}: Sideways (Tetap) -> Harga: ${newMarket[card.sector]}`);
         break;
 
       case 'DIVIDEND':
-        logMsgs.push(`${card.sector}: Dividen! Pemain mendapat koin per saham.`);
+        logMsgs.push(`Saham ${card.sector}: Dividen! Pemain mendapat koin per saham.`);
         newPlayers = newPlayers.map(p => ({
           ...p,
           coins: p.coins + (p.portfolio[card.sector] || 0)
@@ -147,7 +147,7 @@ export const applyEconomyPhase = (
       case 'RESESI':
         if (newMarket[card.sector] > INITIAL_PRICE) {
           newMarket[card.sector] -= 1;
-          logMsgs.push(`EFEK KHUSUS: Resesi di ${card.sector}! Harga turun 1 poin.`);
+          logMsgs.push(`EFEK KHUSUS: Resesi di Saham ${card.sector}! Harga turun 1 poin.`);
         }
         break;
 
@@ -167,7 +167,7 @@ export const applyEconomyPhase = (
       case 'STIMULUS':
         if (newMarket[card.sector] < INITIAL_PRICE) {
           newMarket[card.sector] += 1;
-          logMsgs.push(`EFEK KHUSUS: Stimulus di ${card.sector}! Harga naik 1 poin.`);
+          logMsgs.push(`EFEK KHUSUS: Stimulus di Saham ${card.sector}! Harga naik 1 poin.`);
         }
         break;
 
@@ -182,7 +182,7 @@ export const applyEconomyPhase = (
       case 'BUYBACK': {
         newMarket[card.sector] = Math.min(15, newMarket[card.sector] + 1);
         const buybackPrice = newMarket[card.sector];
-        logMsgs.push(`EFEK KHUSUS: Buyback di ${card.sector}! Harga +1 menjadi ${buybackPrice}. Pemilik WAJIB jual.`);
+        logMsgs.push(`EFEK KHUSUS: Buyback di Saham ${card.sector}! Harga +1 menjadi ${buybackPrice}. Pemilik WAJIB jual.`);
         newPlayers = newPlayers.map(p => {
           const shares = p.portfolio[card.sector] || 0;
           if (shares > 0) {
@@ -199,7 +199,7 @@ export const applyEconomyPhase = (
 
       case 'PENERBITAN_SAHAM':
         newMarket[card.sector] = Math.max(0, newMarket[card.sector] - 1);
-        logMsgs.push(`EFEK KHUSUS: Penerbitan Saham Baru di ${card.sector}! Harga -1. Pemilik dapat bonus saham (Stock Split).`);
+        logMsgs.push(`EFEK KHUSUS: Penerbitan Saham Baru di Saham ${card.sector}! Harga -1. Pemilik dapat bonus saham (Stock Split).`);
         newPlayers = newPlayers.map(p => ({
           ...p,
           portfolio: { ...p.portfolio, [card.sector]: (p.portfolio[card.sector] || 0) * 2 }
@@ -220,14 +220,14 @@ export const applyEconomyPhase = (
         ...p,
         portfolio: { ...p.portfolio, [s]: p.portfolio[s] * 2 }
       }));
-      logMsgs.push(`STOCK SPLIT OTOMATIS di ${s}! Harga terlalu tinggi, jumlah saham pemain dikali dua.`);
+      logMsgs.push(`STOCK SPLIT OTOMATIS di Saham ${s}! Harga terlalu tinggi, jumlah saham pemain dikali dua.`);
     } else if (newMarket[s] < 2) {
       newMarket[s] = 5;
       newPlayers = newPlayers.map(p => ({
         ...p,
         portfolio: { ...p.portfolio, [s]: 0 }
       }));
-      logMsgs.push(`STOCK CRASH OTOMATIS di ${s}! Harga terlalu rendah, semua investasi di sektor ini hangus.`);
+      logMsgs.push(`STOCK CRASH OTOMATIS di Saham ${s}! Harga terlalu rendah, semua investasi di sektor ini hangus.`);
     }
   });
 

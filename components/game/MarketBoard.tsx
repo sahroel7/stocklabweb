@@ -28,7 +28,7 @@ export const MarketBoard: React.FC = () => {
       {orderedSectors.map((sector) => {
         const price = market[sector];
         const isSuspended = (suspendedSectors as string[]).includes(sector);
-        const displayName = sector === 'Reksa Dana' ? 'RD' : sector;
+        const displayName = sector === 'Reksa Dana' ? 'Reksa Dana' : `Saham ${sector}`;
         
         return (
           <div key={sector} className="relative flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/10 shadow-lg min-w-0">
@@ -38,7 +38,7 @@ export const MarketBoard: React.FC = () => {
               </div>
             )}
             <div className={`w-2 h-2 rounded-full mb-1 ${sectorColors[sector]}`} />
-            <h3 className="text-[9px] font-bold text-white/70 truncate w-full text-center">{displayName}</h3>
+            <h3 className="text-[9px] font-bold text-white/70 truncate w-full text-center whitespace-nowrap">{displayName}</h3>
             <div className="text-lg font-black text-white leading-none mt-1">{price}</div>
             <div className="text-[7px] uppercase tracking-tighter text-white/30 mt-1 hidden md:block">Price</div>
           </div>

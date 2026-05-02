@@ -52,7 +52,7 @@ export const EconomyModal: React.FC = () => {
           {(Object.entries(sectors) as [Exclude<Sector, 'Reksa Dana'>, EconomyCard][]).map(([sector, card]) => (
             <div key={sector} className={`border p-5 rounded-[2rem] flex flex-col gap-3 transition-all ${getCardColorClass(card.color)}`}>
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-50">Saham {sector}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-50 whitespace-nowrap">Saham {sector}</span>
                 {getCardIcon(card)}
               </div>
               
