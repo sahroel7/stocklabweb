@@ -71,11 +71,15 @@ export const PlayerSection: React.FC = () => {
   if (!mounted) return <div className="h-16 bg-white/5 animate-pulse rounded-xl" />;
 
   const activePlayerId = turnOrder[activePlayerIndex];
-  const sortedPlayers = [...players].sort((a, b) => calculateNetWorth(b, market) - calculateNetWorth(a, market));
+  
+  // Sort by turnOrder if it exists, otherwise fallback to default
+  const displayPlayers = turnOrder.length > 0 
+    ? turnOrder.map(id => players.find(p => p.id === id)!).filter(Boolean)
+    : players;
 
   return (
     <div className="grid grid-cols-5 gap-2 opacity-80 hover:opacity-100 transition-opacity">
-      {sortedPlayers.map((p, i) => (
+      {displayPlayers.map((p, i) => (
         <div 
           key={p.id} 
           className={`p-2 rounded-xl border transition-all ${
@@ -84,14 +88,15 @@ export const PlayerSection: React.FC = () => {
               : 'bg-white/5 border-white/10'
           } ${activePlayerId === p.id ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/5' : ''}`}
         >
-          <div className="flex justify-between items-center mb-1">
-            <span className={`text-[8px] font-black ${i === 0 ? 'text-yellow-500' : 'text-white/20'}`}>#{i + 1}</span>
-            <span className={`text-[8px] font-black uppercase ${activePlayerId === p.id ? 'text-indigo-400' : 'text-white/40'}`}>
-              P{p.id + 1}
+          <div className="flex justify-between items-start mb-1 gap-1">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="text-[9px] font-bold text-white/80 truncate leading-none">
+                {p.name}
+              </div>
+            </div>
+            <span className={`text-[8px] font-black uppercase tracking-tight shrink-0 ${activePlayerId === p.id ? 'text-indigo-400' : 'text-white/40'}`}>
+              {turnOrder.length > 0 ? `Urutan ${i + 1}` : `P${p.id + 1}`}
             </span>
-          </div>
-          <div className="text-[10px] font-black text-white leading-none">
-            {p.id === 0 ? calculateNetWorth(p, market) : '???' }
           </div>
           
           <div className="flex justify-between pt-1.5 mt-1.5 border-t border-white/5 overflow-hidden gap-1">

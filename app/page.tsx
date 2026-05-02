@@ -138,7 +138,7 @@ export default function StocklabPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-black tracking-tighter uppercase italic text-indigo-500">Stocklab</h1>
             <div className="flex items-center gap-1.5 ml-2">
-              <span className="bg-indigo-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">R{round}</span>
+              <span className="bg-indigo-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">Round {round}</span>
             </div>
           </div>
           
