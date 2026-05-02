@@ -161,9 +161,35 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       .sort((a, b) => b.amount - a.amount || a.id - b.id)
       .map(b => b.id);
 
-    const deck = [...state.actionDeck];
+    // Draw cards with constraints: max 5 same sector, max 3 same type
+    let deck = [...state.actionDeck];
+    let drawn: ActionCard[] = [];
+    let reshuffleCount = 0;
     const numCards = NUM_PLAYERS * 2;
-    const drawn = deck.splice(0, numCards);
+
+    const checkConstraints = (cards: ActionCard[]) => {
+      const sectorCounts: Record<string, number> = {};
+      const typeCounts: Record<string, number> = {};
+      for (const card of cards) {
+        sectorCounts[card.sector] = (sectorCounts[card.sector] || 0) + 1;
+        typeCounts[card.type] = (typeCounts[card.type] || 0) + 1;
+        if (sectorCounts[card.sector] > 5 || typeCounts[card.type] > 3) return false;
+      }
+      return true;
+    };
+
+    while (reshuffleCount < 100) {
+      deck.sort(() => Math.random() - 0.5);
+      drawn = deck.slice(0, numCards);
+      if (checkConstraints(drawn)) break;
+      reshuffleCount++;
+    }
+
+    const remainingDeck = deck.slice(numCards);
+    const newLogs = [`Bidding selesai. Urutan jalan: ${sortedOrder.map(id => state.players.find(p => p.id === id)?.name).join(', ')}`];
+    if (reshuffleCount > 0) {
+      newLogs.push(`Market di-reshuffle ${reshuffleCount}x untuk menjaga variasi kartu.`);
+    }
 
     return {
       players: newPlayers,
@@ -172,17 +198,43 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       phase: 'ACTION',
       currentBids: {},
       suspendedSectors: [],
-      actionDeck: deck,
+      actionDeck: remainingDeck,
       marketCards: drawn,
-      logs: [`Bidding selesai. Urutan jalan: ${sortedOrder.map(id => state.players.find(p => p.id === id)?.name).join(', ')}`, ...state.logs]
+      logs: [...newLogs, ...state.logs]
     };
   }),
 
   drawMarketCards: () => set((state) => {
-    const deck = [...state.actionDeck];
+    let deck = [...state.actionDeck];
+    let drawn: ActionCard[] = [];
+    let reshuffleCount = 0;
     const numCards = NUM_PLAYERS * 2;
-    const drawn = deck.splice(0, numCards);
-    return { actionDeck: deck, marketCards: drawn };
+
+    const checkConstraints = (cards: ActionCard[]) => {
+      const sectorCounts: Record<string, number> = {};
+      const typeCounts: Record<string, number> = {};
+      for (const card of cards) {
+        sectorCounts[card.sector] = (sectorCounts[card.sector] || 0) + 1;
+        typeCounts[card.type] = (typeCounts[card.type] || 0) + 1;
+        if (sectorCounts[card.sector] > 5 || typeCounts[card.type] > 3) return false;
+      }
+      return true;
+    };
+
+    while (reshuffleCount < 100) {
+      deck.sort(() => Math.random() - 0.5);
+      drawn = deck.slice(0, numCards);
+      if (checkConstraints(drawn)) break;
+      reshuffleCount++;
+    }
+
+    return { 
+      actionDeck: deck.slice(numCards), 
+      marketCards: drawn,
+      logs: reshuffleCount > 0 
+        ? [`Market di-reshuffle ${reshuffleCount}x untuk menjaga variasi.`, ...state.logs] 
+        : state.logs
+    };
   }),
 
   takeActionCard: (playerId, cardId) => set((state) => {
