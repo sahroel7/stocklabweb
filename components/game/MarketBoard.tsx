@@ -24,23 +24,23 @@ export const MarketBoard: React.FC = () => {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-white/10 backdrop-blur-md rounded-xl">
+    <div className="grid grid-cols-5 gap-2 p-2 bg-white/10 backdrop-blur-md rounded-xl">
       {orderedSectors.map((sector) => {
         const price = market[sector];
         const isSuspended = (suspendedSectors as string[]).includes(sector);
-        const displayName = sector === 'Reksa Dana' ? sector : `Saham ${sector}`;
+        const displayName = sector === 'Reksa Dana' ? 'RD' : sector;
         
         return (
-          <div key={sector} className="relative flex flex-col items-center p-3 rounded-lg bg-white/5 border border-white/10 shadow-lg">
+          <div key={sector} className="relative flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/10 shadow-lg min-w-0">
             {isSuspended && (
-              <div className="absolute top-1 right-1 text-red-400" title="Suspended">
-                <Lock size={14} />
+              <div className="absolute top-0.5 right-0.5 text-red-400" title="Suspended">
+                <Lock size={10} />
               </div>
             )}
-            <div className={`w-3 h-3 rounded-full mb-2 ${sectorColors[sector]}`} />
-            <h3 className="text-sm font-semibold text-white/70">{displayName}</h3>
-            <div className="text-2xl font-bold text-white mt-1">{price}</div>
-            <div className="text-[10px] uppercase tracking-tighter text-white/40 mt-1">Price Per Share</div>
+            <div className={`w-2 h-2 rounded-full mb-1 ${sectorColors[sector]}`} />
+            <h3 className="text-[9px] font-bold text-white/70 truncate w-full text-center">{displayName}</h3>
+            <div className="text-lg font-black text-white leading-none mt-1">{price}</div>
+            <div className="text-[7px] uppercase tracking-tighter text-white/30 mt-1 hidden md:block">Price</div>
           </div>
         );
       })}

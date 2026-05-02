@@ -133,40 +133,32 @@ export default function StocklabPage() {
     <div className="min-h-screen bg-zinc-950 text-white selection:bg-indigo-500/30">
       {/* Header */}
       <header className="border-b border-white/5 bg-black/20 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-black tracking-tighter uppercase italic text-indigo-500">Stocklab</h1>
-            <div className="h-6 w-px bg-white/10" />
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Round</span>
-              <span className="bg-indigo-600 text-[10px] font-bold px-2 py-0.5 rounded-full">{round} / 6</span>
+        <div className="max-w-7xl mx-auto px-4 h-12 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-black tracking-tighter uppercase italic text-indigo-500">Stocklab</h1>
+            <div className="flex items-center gap-1.5 ml-2">
+              <span className="bg-indigo-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">R{round}</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-             <div className="hidden md:flex flex-col items-end">
-               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Phase</span>
-               <span className="text-sm font-bold text-white">{phase}</span>
-             </div>
+          <div className="flex items-center gap-3">
              <button 
                onClick={() => setShowRules(true)}
-               className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
-               title="Cara Bermain"
+               className="p-1.5 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
              >
-               <HelpCircle className="w-5 h-5" />
+               <HelpCircle className="w-4 h-4" />
              </button>
              <button 
                onClick={resetGame}
-               className="p-2 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
-               title="Reset Game"
+               className="p-1.5 hover:bg-white/5 rounded-full transition-colors text-white/40 hover:text-white"
              >
-               <RefreshCcw className="w-5 h-5" />
+               <RefreshCcw className="w-4 h-4" />
              </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+      <main className="max-w-7xl mx-auto p-2 md:p-6 space-y-4">
         {phase === 'END' ? (
           <div className="max-w-2xl mx-auto text-center space-y-8 animate-in fade-in zoom-in duration-500">
             <div className="inline-flex p-4 bg-yellow-500/10 rounded-full mb-4">
