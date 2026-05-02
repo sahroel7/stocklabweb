@@ -11,6 +11,7 @@ import { ChoiceModal } from '@/components/game/ChoiceModal';
 import { EconomyModal } from '@/components/game/EconomyModal';
 import { PlayerSection } from '@/components/game/PlayerSection';
 import { InteractionOverlay } from '@/components/game/InteractionOverlay';
+import { SellingModal } from '@/components/game/SellingModal';
 import { Trophy, RefreshCcw, Info, HelpCircle, X } from 'lucide-react';
 
 export default function StocklabPage() {
@@ -223,6 +224,7 @@ export default function StocklabPage() {
       <ChoiceModal />
       <EconomyModal />
       <InteractionOverlay />
+      <SellingModal />
 
       {/* Rules Modal */}
       {showRules && (

@@ -110,48 +110,34 @@ export const PlayerSection: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="space-y-1">
-                {portfolioEntries.map(([sector, amount]) => (
-                  <div key={sector} className="flex justify-between items-center p-2 bg-white/5 rounded-lg border border-white/5">
-                    <span className="text-[10px] text-white/80 whitespace-nowrap">
-                      {sector === 'Reksa Dana' ? sector : `Saham ${sector}`}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-white text-[10px]">{amount} <span className="text-white/20">Lbr</span></span>
-                      {phase === 'SELLING' && (amount as number) > 0 && activePlayer?.id === 0 && (
-                        <button 
-                          onClick={() => sellStock(activePlayer.id, sector as Sector, 1)}
-                          className="text-[8px] px-1.5 py-0.5 bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-500/30 rounded uppercase font-bold transition-all"
-                        >
-                          Sell 1
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col justify-center items-center">
-               {phase === 'ACTION' && activePlayerId === 0 && (
-                 <p className="text-white/40 text-[10px] italic">Pilih kartu di bursa...</p>
-               )}
-               {phase === 'ACTION' && activePlayerId !== 0 && (
-                 <p className="text-indigo-400 text-[10px] font-bold animate-pulse">Bot berpikir...</p>
-               )}
-
-               {phase === 'SELLING' && activePlayerId === 0 && (
-                 <button 
-                   onClick={() => useGameStore.getState().nextTurn()}
-                   className="group flex items-center gap-2 px-4 py-2 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-all"
-                 >
-                   Lanjut
-                   <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                 </button>
-               )}
-            </div>
+          <div className="p-3">
+             {phase === 'ACTION' && activePlayerId === 0 && (
+               <div className="py-2 text-center">
+                 <p className="text-white/40 text-[10px] italic">Pilih kartu di bursa untuk melakukan aksi...</p>
+               </div>
+             )}
+             {phase === 'ACTION' && activePlayerId !== 0 && (
+               <div className="py-2 text-center">
+                 <p className="text-indigo-400 text-[10px] font-bold animate-pulse">Bot sedang berpikir...</p>
+               </div>
+             )}
+             {phase === 'SELLING' && activePlayerId === 0 && (
+                <div className="py-2 text-center">
+                  <p className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-2">Fase Penjualan Aktif</p>
+                  <button 
+                    onClick={() => useGameStore.getState().nextTurn()}
+                    className="group mx-auto flex items-center gap-2 px-6 py-2 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+                  >
+                    Selesai & Lanjut
+                    <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+             )}
+             {phase === 'SELLING' && activePlayerId !== 0 && (
+                <div className="py-2 text-center">
+                  <p className="text-white/20 text-[10px] italic">Bot sedang melakukan penjualan...</p>
+                </div>
+             )}
           </div>
         </div>
       )}
