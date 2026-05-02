@@ -9,7 +9,7 @@ import { ActionTable } from '@/components/game/ActionTable';
 import { BiddingModal } from '@/components/game/BiddingModal';
 import { ChoiceModal } from '@/components/game/ChoiceModal';
 import { EconomyModal } from '@/components/game/EconomyModal';
-import { PlayerSection } from '@/components/game/PlayerSection';
+import { PlayerSection, UserStats } from '@/components/game/PlayerSection';
 import { InteractionOverlay } from '@/components/game/InteractionOverlay';
 import { SellingModal } from '@/components/game/SellingModal';
 import { Trophy, RefreshCcw, Info, HelpCircle, X } from 'lucide-react';
@@ -196,10 +196,13 @@ export default function StocklabPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-8 space-y-8">
+            <div className="lg:col-span-8 space-y-4">
+              <UserStats />
               <MarketBoard />
               <PlayerSection />
-              <ActionTable />
+              <div className="pt-4">
+                <ActionTable />
+              </div>
             </div>
             
             <div className="lg:col-span-4 h-fit lg:sticky lg:top-24">
