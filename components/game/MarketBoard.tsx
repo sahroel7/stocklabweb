@@ -16,6 +16,8 @@ export const MarketBoard: React.FC = () => {
   const suspendedSectors = useGameStore((state) => state.suspendedSectors);
   const sectorOrder = useGameStore((state) => state.sectorOrder);
 
+  const phase = useGameStore(state => state.phase);
+
   // Mencegah flash konten yang salah sebelum hydration selesai
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
@@ -29,7 +31,9 @@ export const MarketBoard: React.FC = () => {
       {sectorOrder.map((sector) => {
         const price = market[sector];
         const isSuspended = (suspendedSectors as string[]).includes(sector);
-        const displayName = sector === 'Reksa Dana' ? 'Reksa Dana' : `Saham ${sector}`;
+        const isRD = sector === 'Reksa Dana';
+        const showPrice = !isRD || phase === 'SELLING' || phase === 'END';
+        const displayName = isRD ? 'Reksa Dana' : `Saham ${sector}`;
         
         return (
           <div key={sector} className="relative flex flex-col items-center p-2 rounded-lg bg-white/5 border border-white/10 shadow-lg min-w-0">
@@ -40,7 +44,9 @@ export const MarketBoard: React.FC = () => {
             )}
             <div className={`w-2 h-2 rounded-full mb-1 ${sectorColors[sector]}`} />
             <h3 className="text-[9px] font-bold text-white/70 truncate w-full text-center whitespace-nowrap">{displayName}</h3>
-            <div className="text-lg font-black text-white leading-none mt-1">{price}</div>
+            <div className="text-lg font-black text-white leading-none mt-1">
+              {showPrice ? price : '?'}
+            </div>
             <div className="text-[7px] uppercase tracking-tighter text-white/30 mt-1 hidden md:block">Price</div>
           </div>
         );

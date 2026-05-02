@@ -208,10 +208,8 @@ export const applyEconomyPhase = (
     }
   }
 
-  // Handle Reksa Dana (Average of others)
-  const totalSectors = newMarket.Keuangan + newMarket.Agrikultur + newMarket.Tambang + newMarket.Konsumer;
-  newMarket['Reksa Dana'] = Math.floor(totalSectors / 4);
-
+  // Reksa Dana price will be calculated in store.ts using sectorOrder
+  
   // Handle Stock Split (>12) and Crash (<2) - Original rules still apply
   SECTORS.forEach(s => {
     if (newMarket[s] > 12) {

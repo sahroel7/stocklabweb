@@ -5,20 +5,19 @@ import { generateEconomyDeck, applyEconomyPhase, INITIAL_PRICE } from './economy
 const TOTAL_ROUNDS = 6;
 const NUM_PLAYERS = 5;
 
-const SECTORS: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
+const SECTORS: Sector[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer', 'Reksa Dana'];
 
 const generateActionDeck = (): ActionCard[] => {
+  const stockSectors: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
   const types: ActionType[] = [
     'INFO_BURSA', 'RUMOR', 'QUICKBUY', 'TRADING_FEE', 'AKUISISI'
   ];
   const deck: ActionCard[] = [];
   
-  SECTORS.forEach(sector => {
+  // 1. Generate for Stock Sectors
+  stockSectors.forEach(sector => {
     types.forEach(type => {
-      // 3 cards of each type per sector = 15 cards per sector
-      // 4 sectors * 15 cards = 60 cards total
       const count = 3;
-      
       for (let i = 0; i < count; i++) {
         deck.push({
           id: `${type}-${sector}-${i}-${Math.random().toString(36).substr(2, 9)}`,
@@ -31,6 +30,23 @@ const generateActionDeck = (): ActionCard[] => {
       }
     });
   });
+
+  // 2. Generate for Reksa Dana (Only relevant types, or all if preferred)
+  // Let's include only general utility types for RD to keep it realistic
+  const rdTypes: ActionType[] = ['QUICKBUY', 'TRADING_FEE'];
+  rdTypes.forEach(type => {
+     for (let i = 0; i < 4; i++) { // Add a reasonable amount of RD cards
+        deck.push({
+          id: `${type}-RD-${i}-${Math.random().toString(36).substr(2, 9)}`,
+          type,
+          sector: 'Reksa Dana',
+          title: getCardTitle(type, 'Reksa Dana'),
+          description: getCardDescription(type, 'Reksa Dana'),
+          color: getSectorColor('Reksa Dana'),
+        });
+     }
+  });
+
   return deck.sort(() => Math.random() - 0.5);
 };
 
@@ -204,13 +220,18 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     if (get().extraTurns > 0) {
       // FORCE SHARE during Quickbuy extra turns
       set((state) => ({
-        players: state.players.map(p => p.id === playerId ? {
-          ...p,
-          coins: p.coins - cost,
-          portfolio: { ...p.portfolio, [card.sector]: p.portfolio[card.sector] + 1 }
-        } : p),
+        players: state.players.map(p => {
+          if (p.id !== playerId) return p;
+          const isRD = card.sector === 'Reksa Dana';
+          return {
+            ...p,
+            coins: p.coins - cost,
+            reksaDana: isRD ? p.reksaDana + 1 : p.reksaDana,
+            portfolio: isRD ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] + 1 }
+          };
+        }),
         pendingAction: null,
-        logs: [`${player.name} menyimpan Saham ${card.sector} (${card.title}) sebagai saham (Quickbuy). ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+        logs: [`${player.name} menyimpan ${card.sector === 'Reksa Dana' ? card.sector : `Saham ${card.sector}`} (${card.title}) sebagai saham (Quickbuy). ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
       }));
       get().nextTurn();
       return;
@@ -218,13 +239,18 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     if (choice === 'SHARE') {
       set((state) => ({
-        players: state.players.map(p => p.id === playerId ? {
-          ...p,
-          coins: p.coins - cost,
-          portfolio: { ...p.portfolio, [card.sector]: p.portfolio[card.sector] + 1 }
-        } : p),
+        players: state.players.map(p => {
+          if (p.id !== playerId) return p;
+          const isRD = card.sector === 'Reksa Dana';
+          return {
+            ...p,
+            coins: p.coins - cost,
+            reksaDana: isRD ? p.reksaDana + 1 : p.reksaDana,
+            portfolio: isRD ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] + 1 }
+          };
+        }),
         pendingAction: null,
-        logs: [`${player.name} menyimpan Saham ${card.sector} (${card.title}) sebagai saham. ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+        logs: [`${player.name} menyimpan ${card.sector === 'Reksa Dana' ? card.sector : `Saham ${card.sector}`} (${card.title}) sebagai saham. ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
       }));
       get().nextTurn();
     } else if (choice === 'SELL') {
@@ -487,8 +513,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     if (state.phase === 'SELLING') {
       if (nextIndex >= NUM_PLAYERS) {
         const sectors: Record<string, EconomyCard> = {};
-        SECTORS.forEach(s => {
-          sectors[s] = state.economyDeck[s][state.round - 1];
+        // Filter out Reksa Dana as it doesn't have an economy card
+        SECTORS.filter(s => s !== 'Reksa Dana').forEach(s => {
+          sectors[s] = state.economyDeck[s as Exclude<Sector, 'Reksa Dana'>][state.round - 1];
         });
 
         return {
@@ -513,13 +540,21 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     const { sectors } = state.currentEconomyCards;
     
-    const { newMarket, newPlayers, logMsgs } = applyEconomyPhase(
+    const { newMarket: updatedMarket, newPlayers, logMsgs } = applyEconomyPhase(
       state.market,
       state.players,
       sectors as Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>,
       state.turnOrder,
       state.suspendedSectors
     );
+
+    // Calculate Reksa Dana Price based on neighbors in sectorOrder
+    // [0, 1, RD(2), 3, 4]
+    const leftAvg = Math.floor((updatedMarket[state.sectorOrder[0]] + updatedMarket[state.sectorOrder[1]]) / 2);
+    const rightAvg = Math.floor((updatedMarket[state.sectorOrder[3]] + updatedMarket[state.sectorOrder[4]]) / 2);
+    const rdPrice = Math.max(leftAvg, rightAvg);
+    
+    const newMarket = { ...updatedMarket, 'Reksa Dana': rdPrice };
 
     const isLastRound = state.round === TOTAL_ROUNDS;
 

@@ -23,7 +23,7 @@ export type ActionType =
 export interface ActionCard {
   id: string;
   type: ActionType;
-  sector: Exclude<Sector, 'Reksa Dana'>;
+  sector: Sector;
   title: string;
   description: string;
   color: string; // To match physical card colors (sector-based)
