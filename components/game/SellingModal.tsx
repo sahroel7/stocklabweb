@@ -43,9 +43,10 @@ export const SellingModal: React.FC = () => {
                   
                   <button
                     disabled={count === 0}
-                    onClick={() => sellStock(0, sector, 1)}
-                    className="w-full py-1.5 md:py-2 bg-emerald-600 disabled:bg-zinc-800 disabled:text-white/10 text-white rounded-lg md:rounded-xl flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
+                    onClick={() => sellStock(0, sector, count)}
+                    className="w-full py-1.5 md:py-2 bg-emerald-600 disabled:bg-zinc-800 disabled:text-white/10 text-white rounded-lg md:rounded-xl flex flex-col items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
                   >
+                    <span className="text-[6px] md:text-[8px] font-black uppercase leading-none mb-0.5">Jual Semua</span>
                     <Coins className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
                   </button>
                 </div>

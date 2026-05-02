@@ -4,11 +4,12 @@ import { Coins } from 'lucide-react';
 import { Sector } from '@/lib/types';
 
 const calculateNetWorth = (p: any, market: any) => {
-  let total = p.coins;
-  Object.entries(p.portfolio).forEach(([sector, amount]) => {
+  if (!p || !market) return 0;
+  let total = p.coins || 0;
+  Object.entries(p.portfolio || {}).forEach(([sector, amount]) => {
     total += (amount as number) * (market[sector as Sector] || 0);
   });
-  total += p.reksaDana * (market['Reksa Dana'] || 0);
+  total += (p.reksaDana || 0) * (market['Reksa Dana'] || 0);
   total -= (p.debt > 0 ? 13 : 0);
   return total;
 };
@@ -22,10 +23,12 @@ export const UserStats: React.FC = () => {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
-  if (!mounted) return <div className="h-10 bg-white/5 animate-pulse rounded-2xl mb-4" />;
+  if (!mounted || players.length === 0) return <div className="h-10 bg-white/5 animate-pulse rounded-2xl mb-4" />;
+
+  const user = players[0];
+  if (!user) return null;
 
   const activePlayerId = turnOrder[activePlayerIndex];
-  const user = players[0];
   const netWorth = calculateNetWorth(user, market);
   const isMyTurn = activePlayerId === 0;
 

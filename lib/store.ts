@@ -7,49 +7,6 @@ const NUM_PLAYERS = 5;
 
 const SECTORS: Sector[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer', 'Reksa Dana'];
 
-const generateActionDeck = (): ActionCard[] => {
-  const stockSectors: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
-  const types: ActionType[] = [
-    'INFO_BURSA', 'RUMOR', 'QUICKBUY', 'TRADING_FEE', 'AKUISISI'
-  ];
-  const deck: ActionCard[] = [];
-  
-  // 1. Generate for Stock Sectors
-  stockSectors.forEach(sector => {
-    types.forEach(type => {
-      const count = 3;
-      for (let i = 0; i < count; i++) {
-        deck.push({
-          id: `${type}-${sector}-${i}-${Math.random().toString(36).substr(2, 9)}`,
-          type,
-          sector,
-          title: getCardTitle(type, sector),
-          description: getCardDescription(type, sector),
-          color: getSectorColor(sector),
-        });
-      }
-    });
-  });
-
-  // 2. Generate for Reksa Dana (Only relevant types, or all if preferred)
-  // Let's include only general utility types for RD to keep it realistic
-  const rdTypes: ActionType[] = ['QUICKBUY', 'TRADING_FEE'];
-  rdTypes.forEach(type => {
-     for (let i = 0; i < 4; i++) { // Add a reasonable amount of RD cards
-        deck.push({
-          id: `${type}-RD-${i}-${Math.random().toString(36).substr(2, 9)}`,
-          type,
-          sector: 'Reksa Dana',
-          title: getCardTitle(type, 'Reksa Dana'),
-          description: getCardDescription(type, 'Reksa Dana'),
-          color: getSectorColor('Reksa Dana'),
-        });
-     }
-  });
-
-  return deck.sort(() => Math.random() - 0.5);
-};
-
 const getCardTitle = (type: ActionType, sector: string): string => {
   switch (type) {
     case 'INFO_BURSA': return 'Info Bursa';
@@ -61,7 +18,7 @@ const getCardTitle = (type: ActionType, sector: string): string => {
   }
 };
 
-const getSectorColor = (sector: Exclude<Sector, 'Reksa Dana'>): string => {
+const getSectorColor = (sector: Sector): string => {
   switch (sector) {
     case 'Tambang': return 'bg-red-600';
     case 'Agrikultur': return 'bg-green-600';
@@ -82,12 +39,48 @@ const getCardDescription = (type: ActionType, sector: string): string => {
   }
 };
 
+const generateActionDeck = (): ActionCard[] => {
+  const stockSectors: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
+  const types: ActionType[] = ['INFO_BURSA', 'RUMOR', 'QUICKBUY', 'TRADING_FEE', 'AKUISISI'];
+  const deck: ActionCard[] = [];
+  
+  stockSectors.forEach(sector => {
+    types.forEach(type => {
+      for (let i = 0; i < 3; i++) {
+        deck.push({
+          id: `${type}-${sector}-${i}-${Math.random().toString(36).substr(2, 9)}`,
+          type,
+          sector,
+          title: getCardTitle(type, sector),
+          description: getCardDescription(type, sector),
+          color: getSectorColor(sector),
+        });
+      }
+    });
+  });
+
+  const rdTypes: ActionType[] = ['QUICKBUY', 'TRADING_FEE'];
+  rdTypes.forEach(type => {
+     for (let i = 0; i < 4; i++) {
+        deck.push({
+          id: `${type}-RD-${i}-${Math.random().toString(36).substr(2, 9)}`,
+          type,
+          sector: 'Reksa Dana',
+          title: getCardTitle(type, 'Reksa Dana'),
+          description: getCardDescription(type, 'Reksa Dana'),
+          color: getSectorColor('Reksa Dana'),
+        });
+     }
+  });
+
+  return deck.sort(() => Math.random() - 0.5);
+};
+
 const generateSectorOrder = (): Sector[] => {
   const stockSectors: Sector[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
   const shuffledStocks = stockSectors.sort(() => Math.random() - 0.5);
-  
   const order: Sector[] = [...shuffledStocks];
-  order.splice(2, 0, 'Reksa Dana'); // Insert at index 2 (the middle of 5)
+  order.splice(2, 0, 'Reksa Dana');
   return order;
 };
 
@@ -109,25 +102,18 @@ interface GameActions {
   takeDebt: (playerId: number) => void;
   addLog: (message: string) => void;
   resetGame: () => void;
+  initializeGame: () => void;
 }
 
-export const useGameStore = create<GameState & GameActions>((set, get) => ({
+const getInitialState = () => ({
   round: 1,
-  phase: 'BIDDING',
-  players: Array.from({ length: NUM_PLAYERS }, (_, i) => ({
-    id: i,
-    name: i === 0 ? 'You' : `Bot ${i}`,
-    coins: 15,
-    portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
-    reksaDana: 0,
-    debt: 0,
-    isBankrupt: false,
-  })),
+  phase: 'BIDDING' as Phase,
+  players: [],
   market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
   turnOrder: [],
   activePlayerIndex: 0,
-  actionDeck: generateActionDeck(),
-  economyDeck: generateEconomyDeck(),
+  actionDeck: [],
+  economyDeck: { Keuangan: [], Agrikultur: [], Tambang: [], Konsumer: [] },
   currentEconomyCards: null,
   marketCards: [],
   currentBids: {},
@@ -135,10 +121,19 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   pendingAction: null,
   extraTurns: 0,
   tradingFeeOwners: { Keuangan: null, Agrikultur: null, Tambang: null, Konsumer: null },
-  logs: ['Game started! Round 1: Bidding Phase.'],
+  logs: [],
   interaction: null,
   peekResults: null,
   sectorOrder: ['Keuangan', 'Agrikultur', 'Reksa Dana', 'Tambang', 'Konsumer'],
+});
+
+export const useGameStore = create<GameState & GameActions>((set, get) => ({
+  ...getInitialState(),
+
+  initializeGame: () => {
+    if (get().players.length > 0) return;
+    get().resetGame();
+  },
 
   addLog: (message) => set((state) => ({ logs: [message, ...state.logs].slice(0, 50) })),
 
@@ -161,7 +156,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       .sort((a, b) => b.amount - a.amount || a.id - b.id)
       .map(b => b.id);
 
-    // Draw cards with constraints: max 5 same sector, max 3 same type
     let deck = [...state.actionDeck];
     let drawn: ActionCard[] = [];
     let reshuffleCount = 0;
@@ -185,11 +179,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       reshuffleCount++;
     }
 
-    const remainingDeck = deck.slice(numCards);
-    const newLogs = [`Bidding selesai. Urutan jalan: ${sortedOrder.map(id => state.players.find(p => p.id === id)?.name).join(', ')}`];
-    if (reshuffleCount > 0) {
-      newLogs.push(`Market di-reshuffle ${reshuffleCount}x untuk menjaga variasi kartu.`);
-    }
+    const logBidding = `Bidding Selesai! Urutan: ${sortedOrder.map(id => newPlayers.find(p => p.id === id)?.name).join(', ')}`;
 
     return {
       players: newPlayers,
@@ -197,10 +187,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       activePlayerIndex: 0,
       phase: 'ACTION',
       currentBids: {},
-      suspendedSectors: [],
-      actionDeck: remainingDeck,
+      actionDeck: deck.slice(numCards),
       marketCards: drawn,
-      logs: [...newLogs, ...state.logs]
+      logs: [logBidding, ...state.logs]
     };
   }),
 
@@ -209,7 +198,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     let drawn: ActionCard[] = [];
     let reshuffleCount = 0;
     const numCards = NUM_PLAYERS * 2;
-
     const checkConstraints = (cards: ActionCard[]) => {
       const sectorCounts: Record<string, number> = {};
       const typeCounts: Record<string, number> = {};
@@ -220,21 +208,13 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       }
       return true;
     };
-
     while (reshuffleCount < 100) {
       deck.sort(() => Math.random() - 0.5);
       drawn = deck.slice(0, numCards);
       if (checkConstraints(drawn)) break;
       reshuffleCount++;
     }
-
-    return { 
-      actionDeck: deck.slice(numCards), 
-      marketCards: drawn,
-      logs: reshuffleCount > 0 
-        ? [`Market di-reshuffle ${reshuffleCount}x untuk menjaga variasi.`, ...state.logs] 
-        : state.logs
-    };
+    return { actionDeck: deck.slice(numCards), marketCards: drawn, logs: ["Pasar diperbarui.", ...state.logs] };
   }),
 
   takeActionCard: (playerId, cardId) => set((state) => {
@@ -246,6 +226,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     const newMarketCards = state.marketCards.filter(c => c.id !== cardId);
     
+    // We don't log here anymore, we log in handleChoice
     return { 
       marketCards: newMarketCards,
       pendingAction: { playerId, card }
@@ -255,35 +236,24 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   handleChoice: (choice) => {
     const { pendingAction, executeActionEffect, players, market } = get();
     if (!pendingAction) return;
-
     const { playerId, card } = pendingAction;
     const player = players.find(p => p.id === playerId);
     if (!player) return;
 
     let cost = 0;
     if ((choice === 'SHARE' || choice === 'ACTION') && card.type === 'TRADING_FEE') {
-      const sharesOwned = player.portfolio[card.sector] || 0;
-      cost = sharesOwned + 1;
-      if (player.coins < cost) {
-        set((state) => ({ logs: [`Gagal: ${player.name} tidak cukup koin untuk Trading Fee (Butuh ${cost}).`, ...state.logs] }));
-      }
+      cost = (player.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) + 1;
     }
 
     if (get().extraTurns > 0) {
-      // FORCE SHARE during Quickbuy extra turns
       set((state) => ({
-        players: state.players.map(p => {
-          if (p.id !== playerId) return p;
-          const isRD = card.sector === 'Reksa Dana';
-          return {
-            ...p,
-            coins: p.coins - cost,
-            reksaDana: isRD ? p.reksaDana + 1 : p.reksaDana,
-            portfolio: isRD ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] + 1 }
-          };
-        }),
+        players: state.players.map(p => p.id === playerId ? {
+          ...p, coins: p.coins - cost,
+          reksaDana: card.sector === 'Reksa Dana' ? p.reksaDana + 1 : p.reksaDana,
+          portfolio: card.sector === 'Reksa Dana' ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: (p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) + 1 }
+        } : p),
         pendingAction: null,
-        logs: [`${player.name} menyimpan ${card.sector === 'Reksa Dana' ? card.sector : `Saham ${card.sector}`} (${card.title}) sebagai saham (Quickbuy). ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+        logs: [`${player.name} menyimpan kartu ${card.title} (${card.sector})`, ...state.logs]
       }));
       get().nextTurn();
       return;
@@ -291,39 +261,26 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     if (choice === 'SHARE') {
       set((state) => ({
-        players: state.players.map(p => {
-          if (p.id !== playerId) return p;
-          const isRD = card.sector === 'Reksa Dana';
-          return {
-            ...p,
-            coins: p.coins - cost,
-            reksaDana: isRD ? p.reksaDana + 1 : p.reksaDana,
-            portfolio: isRD ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] + 1 }
-          };
-        }),
+        players: state.players.map(p => p.id === playerId ? {
+          ...p, coins: p.coins - cost,
+          reksaDana: card.sector === 'Reksa Dana' ? p.reksaDana + 1 : p.reksaDana,
+          portfolio: card.sector === 'Reksa Dana' ? p.portfolio : { ...p.portfolio, [card.sector as Exclude<Sector, 'Reksa Dana'>]: (p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) + 1 }
+        } : p),
         pendingAction: null,
-        logs: [`${player.name} menyimpan ${card.sector === 'Reksa Dana' ? card.sector : `Saham ${card.sector}`} (${card.title}) sebagai saham. ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+        logs: [`${player.name} menyimpan kartu ${card.title} (${card.sector})`, ...state.logs]
       }));
       get().nextTurn();
     } else if (choice === 'SELL') {
       const price = market[card.sector];
       set((state) => ({
-        players: state.players.map(p => p.id === playerId ? {
-          ...p,
-          coins: p.coins + price
-        } : p),
+        players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + price } : p),
         pendingAction: null,
-        logs: [`${player.name} menjual Saham ${card.sector} (${card.title}) langsung seharga ${price} koin.`, ...state.logs]
+        logs: [`${player.name} menjual kartu ${card.title} (${card.sector}) [${price} koin]`, ...state.logs]
       }));
       get().nextTurn();
     } else {
-      if (cost > 0) {
-        set((state) => ({
-          players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins - cost } : p)
-        }));
-      }
+      if (cost > 0) set((state) => ({ players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins - cost } : p) }));
       executeActionEffect(playerId, card);
-      // pendingAction is cleared inside executeActionEffect or after interaction
     }
   },
 
@@ -331,126 +288,104 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const { players, market, economyDeck, round } = get();
     const player = players.find(p => p.id === playerId);
     if (!player) return;
-
-    let logMsg = `${player.name} menggunakan aksi: ${card.title}`;
     const isBot = playerId !== 0;
 
-    switch (card.type) {
-      case 'QUICKBUY': {
-        const isMarketEmpty = get().marketCards.length === 0;
-        set((state) => ({
-          extraTurns: isMarketEmpty ? 0 : 2,
-          pendingAction: null,
-          players: state.players.map(p => p.id === playerId ? { ...p, skipNextTurn: true } : p),
-          logs: [`${logMsg} (Mengambil 2 kartu tambahan sekarang, giliran berikutnya di-skip)`, ...state.logs]
-        }));
-        
-        if (isMarketEmpty) {
-          get().nextTurn();
-        }
-        break;
-      }
+    let logMsg = `${player.name} menggunakan kartu ${card.title} (${card.sector})`;
 
-      case 'TRADING_FEE': {
+    switch (card.type) {
+      case 'QUICKBUY':
+        const isMarketEmpty = get().marketCards.length === 0;
+        set((state) => ({ 
+          extraTurns: isMarketEmpty ? 0 : 2, 
+          pendingAction: null, 
+          players: state.players.map(p => p.id === playerId ? { ...p, skipNextTurn: true } : p),
+          logs: [logMsg + (isMarketEmpty ? "" : " [Ambil +2 kartu]"), ...state.logs]
+        }));
+        if (isMarketEmpty) get().nextTurn();
+        break;
+      case 'TRADING_FEE':
         if (isBot) {
-          const bestSector = (Object.entries(player.portfolio) as [Sector, number][])
-            .filter(([s, count]) => count > 0)
-            .sort((a, b) => market[b[0]] - market[a[0]])[0];
-          
+          const bestSector = (Object.entries(player.portfolio) as [Sector, number][]).filter(([s, count]) => count > 0).sort((a, b) => market[b[0]] - market[a[0]])[0];
           if (bestSector) {
             const [s, count] = bestSector;
             const price = market[s];
             const gain = count * price;
-            set((state) => ({
-              players: state.players.map(p => p.id === playerId ? {
-                ...p,
-                coins: p.coins + gain,
-                portfolio: { ...p.portfolio, [s]: 0 }
-              } : p),
+            set((state) => ({ 
+              players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + gain, portfolio: { ...p.portfolio, [s]: 0 } } : p), 
               pendingAction: null,
-              logs: [`${logMsg} (Menjual semua Saham ${s} seharga ${gain} koin)`, ...state.logs]
+              logs: [logMsg + ` - Jual Saham ${s} [${gain} koin]`, ...state.logs]
             }));
           } else {
-             set((state) => ({ pendingAction: null, logs: [`${logMsg} (Gagal: Tidak ada saham untuk dijual)`, ...state.logs] }));
+            set((state) => ({ pendingAction: null, logs: [logMsg + " (Gagal: Tidak ada saham)", ...state.logs] }));
           }
           get().nextTurn();
         } else {
-          set({ interaction: { type: 'SELECT_STOCK', count: 1 }, pendingAction: { playerId, card } });
+          set((state) => ({ 
+            interaction: { type: 'SELECT_STOCK', count: 1 }, 
+            pendingAction: { playerId, card },
+            logs: [logMsg, ...state.logs]
+          }));
         }
         break;
-      }
-
-      case 'AKUISISI': {
-        const otherPlayersWithShares = players
-          .filter(p => p.id !== playerId && (p.portfolio[card.sector] || 0) > 0)
-          .sort((a, b) => (b.portfolio[card.sector] || 0) - (a.portfolio[card.sector] || 0));
-        
+      case 'AKUISISI':
+        const otherPlayersWithShares = players.filter(p => p.id !== playerId && (p.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) > 0).sort((a, b) => (b.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) - (a.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0));
         const target = otherPlayersWithShares[0];
-        const playerShares = player.portfolio[card.sector] || 0;
-        const targetShares = target?.portfolio[card.sector] || 0;
-
-        if (target && playerShares >= targetShares) {
-          if (isBot) {
-            get().handleAkuisisiResponse(playerId, target.id);
-          } else {
-            set({ interaction: { type: 'SELECT_PLAYER', count: 1, data: card.sector }, pendingAction: { playerId, card } });
-          }
+        if (target && (player.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0) >= (target.portfolio[card.sector as Exclude<Sector, 'Reksa Dana'>] || 0)) {
+          if (isBot) get().handleAkuisisiResponse(playerId, target.id);
+          else set((state) => ({ 
+            interaction: { type: 'SELECT_PLAYER', count: 1, data: card.sector }, 
+            pendingAction: { playerId, card },
+            logs: [logMsg, ...state.logs]
+          }));
         } else {
-          set((state) => ({ pendingAction: null, logs: [`${logMsg} (Gagal Akuisisi: Saham kamu harus >= target)`, ...state.logs] }));
+          set((state) => ({ pendingAction: null, logs: [logMsg + " (Gagal: Saham tidak cukup)", ...state.logs] }));
           get().nextTurn();
         }
         break;
-      }
-      
-      case 'INFO_BURSA': {
-        if (isBot) {
-          get().peekSectors(playerId, SECTORS.slice(0, 2));
-        } else {
-          set({ interaction: { type: 'SELECT_SECTOR', count: 2 }, pendingAction: { playerId, card } });
-        }
+      case 'INFO_BURSA':
+        if (isBot) get().peekSectors(playerId, SECTORS.slice(0, 2));
+        else set((state) => ({ 
+          interaction: { type: 'SELECT_SECTOR', count: 2 }, 
+          pendingAction: { playerId, card },
+          logs: [logMsg, ...state.logs]
+        }));
         break;
-      }
-
-      case 'RUMOR': {
-        if (isBot) {
-          get().useRumor(playerId, [{ sector: card.sector, amount: 2 }]);
-        } else {
-          set({ interaction: { type: 'RUMOR_CHOICE', count: 1, data: card.sector }, pendingAction: { playerId, card } });
-        }
+      case 'RUMOR':
+        if (isBot) get().useRumor(playerId, [{ sector: card.sector, amount: 2 }]);
+        else set((state) => ({ 
+          interaction: { type: 'RUMOR_CHOICE', count: 1, data: card.sector }, 
+          pendingAction: { playerId, card },
+          logs: [logMsg, ...state.logs]
+        }));
         break;
-      }
     }
   },
 
   peekSectors: (playerId, sectors) => {
-    const { economyDeck, round, players } = get();
-    const results = sectors.map(s => ({
-      sector: s,
-      card: economyDeck[s as Exclude<Sector, 'Reksa Dana'>][round - 1]
-    }));
-
-    set((state) => ({
-      players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + 2 } : p),
-      peekResults: playerId === 0 ? results : null,
-      interaction: null,
+    const { economyDeck, round } = get();
+    const results = sectors.map(s => ({ sector: s, card: economyDeck[s as Exclude<Sector, 'Reksa Dana'>][round - 1] }));
+    const player = get().players.find(p => p.id === playerId);
+    set((state) => ({ 
+      players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + 2 } : p), 
+      peekResults: playerId === 0 ? results : null, 
+      interaction: null, 
       pendingAction: null,
-      logs: [`${state.players.find(p => p.id === playerId)?.name} menggunakan Info Bursa & mendapat 2 koin.`, ...state.logs]
+      logs: [`${player?.name} intip bursa [+2 koin]`, ...state.logs]
     }));
     get().nextTurn();
   },
 
   useRumor: (playerId, effects) => {
+    const player = get().players.find(p => p.id === playerId);
     set((state) => {
       const newMarket = { ...state.market };
-      effects.forEach(eff => {
-        // Rumor cannot cause crash (<2) or split (>12)
-        newMarket[eff.sector] = Math.max(2, Math.min(12, newMarket[eff.sector] + eff.amount));
-      });
+      effects.forEach(eff => newMarket[eff.sector] = Math.max(2, Math.min(12, newMarket[eff.sector] + eff.amount)));
+      const effText = effects.map(e => `${e.sector} (${e.amount > 0 ? '+' : ''}${e.amount})`).join(', ');
       return { 
         market: newMarket, 
         interaction: null, 
         pendingAction: null,
-        logs: [`${state.players.find(p => p.id === playerId)?.name} menggunakan Rumor.`, ...state.logs] 
+        logs: [`${player?.name} merubah harga: ${effText}`, ...state.logs]
       };
     });
     get().nextTurn();
@@ -460,7 +395,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const { players, market, pendingAction } = get();
     const sector = pendingAction?.card.sector as Exclude<Sector, 'Reksa Dana'>;
     const target = players.find(p => p.id === targetId);
-    
+    const actor = players.find(p => p.id === playerId);
     if (target && sector) {
       const compensation = Math.floor(market[sector] / 2);
       set((state) => ({
@@ -471,11 +406,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         }),
         interaction: null,
         pendingAction: null,
-        logs: [`${state.players.find(p => p.id === playerId)?.name} mengakuisisi 1 Saham ${sector} dari ${target.name}.`, ...state.logs]
+        logs: [`${actor?.name} mengambil 1 Saham ${sector} dari ${target.name}`, ...state.logs]
       }));
-    } else {
-      set({ interaction: null, pendingAction: null });
-    }
+    } else set({ interaction: null, pendingAction: null });
     get().nextTurn();
   },
 
@@ -484,163 +417,78 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   sellStock: (playerId, sector, amount) => set((state) => {
     const player = state.players.find(p => p.id === playerId);
     if (!player) return state;
-
     const price = state.market[sector];
-    const actualGain = amount * price;
-    
+    const gain = amount * price;
     const newPlayers = state.players.map(p => {
       if (p.id === playerId) {
-        if (sector === 'Reksa Dana') {
-          return { ...p, coins: p.coins + actualGain, reksaDana: p.reksaDana - amount };
-        }
-        const s = sector as Exclude<Sector, 'Reksa Dana'>;
-        return { ...p, coins: p.coins + actualGain, portfolio: { ...p.portfolio, [s]: p.portfolio[s] - amount } };
+        if (sector === 'Reksa Dana') return { ...p, coins: p.coins + gain, reksaDana: p.reksaDana - amount };
+        return { ...p, coins: p.coins + gain, portfolio: { ...p.portfolio, [sector as Exclude<Sector, 'Reksa Dana'>]: p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>] - amount } };
       }
       return p;
     });
-
-    // If it was a SELECT_STOCK interaction for Trading Fee
-    const isInteraction = state.interaction?.type === 'SELECT_STOCK';
-
-    if (isInteraction) {
-      setTimeout(() => get().nextTurn(), 0);
-    }
-
+    if (state.interaction?.type === 'SELECT_STOCK') setTimeout(() => get().nextTurn(), 0);
     return { 
       players: newPlayers, 
-      interaction: isInteraction ? null : state.interaction,
-      pendingAction: isInteraction ? null : state.pendingAction,
-      logs: [`${player.name} menjual ${amount} ${sector === 'Reksa Dana' ? sector : `Saham ${sector}`}.`, ...state.logs] 
+      interaction: state.interaction?.type === 'SELECT_STOCK' ? null : state.interaction, 
+      pendingAction: state.interaction?.type === 'SELECT_STOCK' ? null : state.pendingAction,
+      logs: [`${player.name} menjual ${amount} lembar Saham ${sector} [${gain} koin]`, ...state.logs]
     };
   }),
 
   nextTurn: () => set((state) => {
-    // 1. If market is empty, phase changes to SELLING immediately
-    if (state.phase === 'ACTION' && state.marketCards.length === 0 && !state.pendingAction) {
-      return { 
-        activePlayerIndex: 0, 
-        phase: 'SELLING', 
-        extraTurns: 0, 
-        logs: ['Semua kartu market telah diambil. Fase: PENJUALAN.', ...state.logs] 
-      };
-    }
-
-    // 2. Handle Extra Turns (Quickbuy)
-    if (state.extraTurns > 1) {
-      // Stay on current player, just decrement
-      return { extraTurns: state.extraTurns - 1 };
-    }
-
-    // If extraTurns was 1, we set it to 0 and move to NEXT player
-    // If extraTurns was 0, we move to NEXT player
-    const wasExtraTurn = state.extraTurns === 1;
+    if (state.phase === 'ACTION' && state.marketCards.length === 0 && !state.pendingAction) return { activePlayerIndex: 0, phase: 'SELLING', extraTurns: 0, logs: ["Memasuki Fase Penjualan", ...state.logs] };
+    if (state.extraTurns > 1) return { extraTurns: state.extraTurns - 1 };
     let nextIndex = state.activePlayerIndex + 1;
-    
     if (state.phase === 'ACTION') {
       if (nextIndex >= NUM_PLAYERS) nextIndex = 0;
-      
-      const nextPlayerId = state.turnOrder[nextIndex];
-      const nextPlayer = state.players.find(p => p.id === nextPlayerId);
-      
+      const nextPlayer = state.players.find(p => p.id === state.turnOrder[nextIndex]);
       if (nextPlayer?.skipNextTurn) {
-        // Skip this player and clear the flag
-        const updatedPlayers = state.players.map(p => p.id === nextPlayerId ? { ...p, skipNextTurn: false } : p);
+        const updatedPlayers = state.players.map(p => p.id === nextPlayer.id ? { ...p, skipNextTurn: false } : p);
         let evenNextIndex = nextIndex + 1;
         if (evenNextIndex >= NUM_PLAYERS) evenNextIndex = 0;
-        
-        return { 
-          players: updatedPlayers,
-          activePlayerIndex: evenNextIndex,
-          extraTurns: 0,
-          logs: [`Giliran ${nextPlayer.name} di-skip karena efek Quickbuy.`, ...state.logs]
-        };
+        return { players: updatedPlayers, activePlayerIndex: evenNextIndex, extraTurns: 0, logs: [`Giliran ${nextPlayer.name} dilewati`, ...state.logs] };
       }
-      
-      return { 
-        activePlayerIndex: nextIndex,
-        extraTurns: 0
-      };
+      return { activePlayerIndex: nextIndex, extraTurns: 0 };
     }
-
     if (state.phase === 'SELLING') {
       if (nextIndex >= NUM_PLAYERS) {
         const sectors: Record<string, EconomyCard> = {};
-        // Filter out Reksa Dana as it doesn't have an economy card
-        SECTORS.filter(s => s !== 'Reksa Dana').forEach(s => {
-          sectors[s] = state.economyDeck[s as Exclude<Sector, 'Reksa Dana'>][state.round - 1];
-        });
-
-        return {
-          phase: 'ECONOMY',
-          currentEconomyCards: { sectors: sectors as any },
-          activePlayerIndex: 0,
-          logs: [`Semua pemain selesai menjual. Memasuki Fase Ekonomi Ronde ${state.round}.`, ...state.logs]
-        };
+        SECTORS.filter(s => s !== 'Reksa Dana').forEach(s => sectors[s] = state.economyDeck[s as Exclude<Sector, 'Reksa Dana'>][state.round - 1]);
+        return { phase: 'ECONOMY', currentEconomyCards: { sectors: sectors as any }, activePlayerIndex: 0, logs: ["Fase Ekonomi dimulai", ...state.logs] };
       }
       return { activePlayerIndex: nextIndex };
     }
-
     return state;
   }),
 
-  resolveEconomy: () => {
-    get().nextTurn();
-  },
+  resolveEconomy: () => get().nextTurn(),
 
   finishEconomyPhase: () => set((state) => {
     if (!state.currentEconomyCards) return state;
-
     const { sectors } = state.currentEconomyCards;
-    
-    const { newMarket: updatedMarket, newPlayers, logMsgs } = applyEconomyPhase(
-      state.market,
-      state.players,
-      sectors as Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>,
-      state.turnOrder,
-      state.suspendedSectors
-    );
-
-    // Calculate Reksa Dana Price based on neighbors in sectorOrder
-    // [0, 1, RD(2), 3, 4]
+    const { newMarket: updatedMarket, newPlayers, logMsgs } = applyEconomyPhase(state.market, state.players, sectors as Record<Exclude<Sector, 'Reksa Dana'>, EconomyCard>, state.turnOrder, state.suspendedSectors);
     const leftAvg = Math.floor((updatedMarket[state.sectorOrder[0]] + updatedMarket[state.sectorOrder[1]]) / 2);
     const rightAvg = Math.floor((updatedMarket[state.sectorOrder[3]] + updatedMarket[state.sectorOrder[4]]) / 2);
     const rdPrice = Math.max(leftAvg, rightAvg);
-    
     const newMarket = { ...updatedMarket, 'Reksa Dana': rdPrice };
-
     const isLastRound = state.round === TOTAL_ROUNDS;
-
-    return {
-      market: newMarket,
-      players: newPlayers,
-      round: isLastRound ? state.round : state.round + 1,
-      phase: isLastRound ? 'END' : 'BIDDING',
-      suspendedSectors: [],
-      currentEconomyCards: null,
-      logs: [...logMsgs.reverse(), `--- Ronde ${state.round} Berakhir ---`, ...state.logs]
-    };
+    return { market: newMarket, players: newPlayers, round: isLastRound ? state.round : state.round + 1, phase: isLastRound ? 'END' : 'BIDDING', currentEconomyCards: null, logs: [...logMsgs.reverse(), `--- Ronde ${state.round} Berakhir ---`, ...state.logs] };
   }),
 
-  takeDebt: (playerId) => set((state) => {
-    const newPlayers = state.players.map(p => p.id === playerId ? {
-      ...p,
-      coins: p.coins + 10,
-      debt: 10
-    } : p);
-    return { players: newPlayers, logs: [`${state.players.find(p => p.id === playerId)?.name} mengambil hutang 10 koin.`, ...state.logs] };
-  }),
-
+  takeDebt: (playerId) => set((state) => ({ players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + 10, debt: 10 } : p), logs: [`${state.players.find(p => p.id === playerId)?.name} berhutang 10 koin`, ...state.logs] })),
+  
   resetGame: () => set({
     round: 1,
     phase: 'BIDDING',
     players: Array.from({ length: NUM_PLAYERS }, (_, i) => ({
       id: i,
-      name: i === 0 ? 'You' : `Bot ${i}`,
+      name: i === 0 ? 'You' : `Pro Bot ${i}`,
       coins: 15,
       portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
       reksaDana: 0,
       debt: 0,
       isBankrupt: false,
+      difficulty: i === 0 ? undefined : 'HARD'
     })),
     market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
     turnOrder: [],

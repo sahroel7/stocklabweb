@@ -11,6 +11,7 @@ export interface Player {
   debt: number; // 0 or 10
   isBankrupt: boolean;
   skipNextTurn?: boolean;
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
 }
 
 export type ActionType = 
