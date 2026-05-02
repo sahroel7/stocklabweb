@@ -95,7 +95,7 @@ export const PlayerSection: React.FC = () => {
               </div>
             </div>
             <span className={`text-[8px] font-black uppercase tracking-tight shrink-0 ${activePlayerId === p.id ? 'text-indigo-400' : 'text-white/40'}`}>
-              {turnOrder.length > 0 ? `Urutan ${i + 1}` : `P${p.id + 1}`}
+              {turnOrder.length > 0 ? `no ${i + 1}` : `P${p.id + 1}`}
             </span>
           </div>
           
