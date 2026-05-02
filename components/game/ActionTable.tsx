@@ -61,8 +61,8 @@ export const ActionTable: React.FC = () => {
             >
               {/* Card Header */}
               <div className="bg-black/20 p-1.5 flex justify-between items-center border-b border-white/10">
-                <span className="text-[7px] font-black uppercase tracking-widest text-white/60">
-                  {card.sector === 'Reksa Dana' ? 'RD' : card.sector}
+                <span className="text-[7px] font-black uppercase tracking-widest text-white/60 whitespace-nowrap">
+                  {card.sector === 'Reksa Dana' ? 'Reksa Dana' : `Saham ${card.sector}`}
                 </span>
               </div>
 
