@@ -83,4 +83,5 @@ export interface GameState {
     data?: any;
   } | null;
   peekResults: { sector: Sector; card: EconomyCard }[] | null;
+  sectorOrder: Sector[];
 }

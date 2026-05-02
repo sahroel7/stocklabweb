@@ -66,6 +66,15 @@ const getCardDescription = (type: ActionType, sector: string): string => {
   }
 };
 
+const generateSectorOrder = (): Sector[] => {
+  const stockSectors: Sector[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
+  const shuffledStocks = stockSectors.sort(() => Math.random() - 0.5);
+  
+  const order: Sector[] = [...shuffledStocks];
+  order.splice(2, 0, 'Reksa Dana'); // Insert at index 2 (the middle of 5)
+  return order;
+};
+
 interface GameActions {
   submitBid: (playerId: number, amount: number) => void;
   resolveBidding: () => void;
@@ -113,6 +122,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   logs: ['Game started! Round 1: Bidding Phase.'],
   interaction: null,
   peekResults: null,
+  sectorOrder: ['Keuangan', 'Agrikultur', 'Reksa Dana', 'Tambang', 'Konsumer'],
 
   addLog: (message) => set((state) => ({ logs: [message, ...state.logs].slice(0, 50) })),
 
@@ -558,5 +568,6 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     extraTurns: 0,
     tradingFeeOwners: { Keuangan: null, Agrikultur: null, Tambang: null, Konsumer: null },
     logs: ['Game dimuat ulang! Ronde 1: Fase Lelang (Bidding).'],
+    sectorOrder: generateSectorOrder(),
   }),
 }));

@@ -6,9 +6,13 @@ import { TrendingUp, TrendingDown, Minus, Zap, Award, AlertTriangle, RefreshCcw,
 export const EconomyModal: React.FC = () => {
   const { phase, currentEconomyCards, finishEconomyPhase } = useGameStore();
 
+  const sectorOrder = useGameStore(state => state.sectorOrder);
+
   if (phase !== 'ECONOMY' || !currentEconomyCards) return null;
 
   const { sectors } = currentEconomyCards;
+  // Filter out 'Reksa Dana' because it doesn't have an economy card
+  const filteredOrder = sectorOrder.filter(s => s !== 'Reksa Dana') as Exclude<Sector, 'Reksa Dana'>[];
 
   const getCardIcon = (card: EconomyCard) => {
     if (card.color === 'PURPLE') {
@@ -49,30 +53,33 @@ export const EconomyModal: React.FC = () => {
 
         {/* Sector Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(Object.entries(sectors) as [Exclude<Sector, 'Reksa Dana'>, EconomyCard][]).map(([sector, card]) => (
-            <div key={sector} className={`border p-5 rounded-[2rem] flex flex-col gap-3 transition-all ${getCardColorClass(card.color)}`}>
-              <div className="flex justify-between items-start">
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-50 whitespace-nowrap">Saham {sector}</span>
-                {getCardIcon(card)}
-              </div>
-              
-              <div className="space-y-1">
-                <h3 className="text-lg font-black leading-tight text-white">{card.title}</h3>
-                <p className="text-[10px] leading-tight text-white/60 h-8 overflow-hidden line-clamp-2">
-                  {card.description}
-                </p>
-              </div>
+          {filteredOrder.map((sector) => {
+            const card = sectors[sector];
+            return (
+              <div key={sector} className={`border p-5 rounded-[2rem] flex flex-col gap-3 transition-all ${getCardColorClass(card.color)}`}>
+                <div className="flex justify-between items-start">
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-50 whitespace-nowrap">Saham {sector}</span>
+                  {getCardIcon(card)}
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black leading-tight text-white">{card.title}</h3>
+                  <p className="text-[10px] leading-tight text-white/60 h-8 overflow-hidden line-clamp-2">
+                    {card.description}
+                  </p>
+                </div>
 
-              <div className="mt-2 flex items-center justify-between">
-                <div className="text-2xl font-black text-white">
-                  {card.type === 'PRICE_CHANGE' ? (card.value > 0 ? `+${card.value}` : card.value) : '•'}
-                </div>
-                <div className="px-2 py-1 bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-tighter text-white/80">
-                  {card.color}
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-2xl font-black text-white">
+                    {card.type === 'PRICE_CHANGE' ? (card.value > 0 ? `+${card.value}` : card.value) : '•'}
+                  </div>
+                  <div className="px-2 py-1 bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-tighter text-white/80">
+                    {card.color}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <button 

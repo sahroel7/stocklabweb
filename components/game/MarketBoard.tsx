@@ -14,18 +14,19 @@ const sectorColors: Record<Sector, string> = {
 export const MarketBoard: React.FC = () => {
   const market = useGameStore((state) => state.market);
   const suspendedSectors = useGameStore((state) => state.suspendedSectors);
+  const sectorOrder = useGameStore((state) => state.sectorOrder);
 
-  const orderedSectors: Sector[] = [
-    'Keuangan',
-    'Agrikultur',
-    'Reksa Dana',
-    'Tambang',
-    'Konsumer'
-  ];
+  // Mencegah flash konten yang salah sebelum hydration selesai
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return <div className="h-24 bg-white/5 animate-pulse rounded-xl" />;
+  }
 
   return (
     <div className="grid grid-cols-5 gap-2 p-2 bg-white/10 backdrop-blur-md rounded-xl">
-      {orderedSectors.map((sector) => {
+      {sectorOrder.map((sector) => {
         const price = market[sector];
         const isSuspended = (suspendedSectors as string[]).includes(sector);
         const displayName = sector === 'Reksa Dana' ? 'Reksa Dana' : `Saham ${sector}`;

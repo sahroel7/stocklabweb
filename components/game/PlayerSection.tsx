@@ -14,9 +14,17 @@ const calculateNetWorth = (p: any, market: any) => {
 };
 
 export const UserStats: React.FC = () => {
-  const { players, market, turnOrder, activePlayerIndex } = useGameStore();
-  const activePlayerId = turnOrder[activePlayerIndex];
+  const players = useGameStore(state => state.players);
+  const market = useGameStore(state => state.market);
+  const turnOrder = useGameStore(state => state.turnOrder);
+  const activePlayerIndex = useGameStore(state => state.activePlayerIndex);
+  
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
 
+  if (!mounted) return <div className="h-10 bg-white/5 animate-pulse rounded-2xl mb-4" />;
+
+  const activePlayerId = turnOrder[activePlayerIndex];
   const user = players[0];
   const netWorth = calculateNetWorth(user, market);
   const isMyTurn = activePlayerId === 0;
@@ -51,18 +59,19 @@ export const UserStats: React.FC = () => {
 };
 
 export const PlayerSection: React.FC = () => {
-  const { players, turnOrder, activePlayerIndex, market } = useGameStore();
+  const players = useGameStore(state => state.players);
+  const turnOrder = useGameStore(state => state.turnOrder);
+  const activePlayerIndex = useGameStore(state => state.activePlayerIndex);
+  const market = useGameStore(state => state.market);
+  const sectorOrder = useGameStore(state => state.sectorOrder);
+
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <div className="h-16 bg-white/5 animate-pulse rounded-xl" />;
 
   const activePlayerId = turnOrder[activePlayerIndex];
   const sortedPlayers = [...players].sort((a, b) => calculateNetWorth(b, market) - calculateNetWorth(a, market));
-
-  const orderedSectors: Sector[] = [
-    'Keuangan',
-    'Agrikultur',
-    'Reksa Dana',
-    'Tambang',
-    'Konsumer'
-  ];
 
   return (
     <div className="grid grid-cols-5 gap-2 opacity-80 hover:opacity-100 transition-opacity">
@@ -86,7 +95,7 @@ export const PlayerSection: React.FC = () => {
           </div>
           
           <div className="flex justify-between pt-1.5 mt-1.5 border-t border-white/5 overflow-hidden gap-1">
-            {orderedSectors.map((sector) => {
+            {sectorOrder.map((sector) => {
               const amount = sector === 'Reksa Dana' ? p.reksaDana : p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>];
               
               return (
