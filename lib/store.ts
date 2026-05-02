@@ -179,7 +179,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       reshuffleCount++;
     }
 
-    const logBidding = `Bidding Selesai! Urutan: ${sortedOrder.map(id => newPlayers.find(p => p.id === id)?.name).join(', ')}`;
+    const bidsInfo = sortedOrder.map(id => {
+      const p = newPlayers.find(player => player.id === id);
+      return `${p?.name}: ${state.currentBids[id] || 0}`;
+    }).join(', ');
+    const logBidding = `Bidding Selesai! [${bidsInfo}]`;
 
     return {
       players: newPlayers,
