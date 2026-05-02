@@ -10,6 +10,7 @@ export interface Player {
   reksaDana: number;
   debt: number; // 0 or 10
   isBankrupt: boolean;
+  skipNextTurn?: boolean;
 }
 
 export type ActionType = 

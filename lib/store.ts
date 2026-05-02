@@ -191,6 +191,21 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       }
     }
 
+    if (get().extraTurns > 0) {
+      // FORCE SHARE during Quickbuy extra turns
+      set((state) => ({
+        players: state.players.map(p => p.id === playerId ? {
+          ...p,
+          coins: p.coins - cost,
+          portfolio: { ...p.portfolio, [card.sector]: p.portfolio[card.sector] + 1 }
+        } : p),
+        pendingAction: null,
+        logs: [`${player.name} menyimpan Saham ${card.sector} (${card.title}) sebagai saham (Quickbuy). ${cost > 0 ? `(Bayar fee ${cost} koin)` : ''}`, ...state.logs]
+      }));
+      get().nextTurn();
+      return;
+    }
+
     if (choice === 'SHARE') {
       set((state) => ({
         players: state.players.map(p => p.id === playerId ? {
@@ -233,14 +248,20 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const isBot = playerId !== 0;
 
     switch (card.type) {
-      case 'QUICKBUY':
+      case 'QUICKBUY': {
+        const isMarketEmpty = get().marketCards.length === 0;
         set((state) => ({
-          extraTurns: 2,
+          extraTurns: isMarketEmpty ? 0 : 2,
           pendingAction: null,
-          logs: [`${logMsg} (Dapat mengambil 2 kartu tambahan sekarang)`, ...state.logs]
+          players: state.players.map(p => p.id === playerId ? { ...p, skipNextTurn: true } : p),
+          logs: [`${logMsg} (Mengambil 2 kartu tambahan sekarang, giliran berikutnya di-skip)`, ...state.logs]
         }));
-        get().nextTurn(); // Call nextTurn to handle extraTurns correctly
+        
+        if (isMarketEmpty) {
+          get().nextTurn();
+        }
         break;
+      }
 
       case 'TRADING_FEE': {
         if (isBot) {
@@ -411,21 +432,46 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       return { 
         activePlayerIndex: 0, 
         phase: 'SELLING', 
-        extraTurns: 0, // Clear any remaining extra turns
+        extraTurns: 0, 
         logs: ['Semua kartu market telah diambil. Fase: PENJUALAN.', ...state.logs] 
       };
     }
 
-    // 2. If player has extra turns (Quickbuy), stay on same player
-    if (state.extraTurns > 0) {
+    // 2. Handle Extra Turns (Quickbuy)
+    if (state.extraTurns > 1) {
+      // Stay on current player, just decrement
       return { extraTurns: state.extraTurns - 1 };
     }
 
+    // If extraTurns was 1, we set it to 0 and move to NEXT player
+    // If extraTurns was 0, we move to NEXT player
+    const wasExtraTurn = state.extraTurns === 1;
     let nextIndex = state.activePlayerIndex + 1;
     
     if (state.phase === 'ACTION') {
       if (nextIndex >= NUM_PLAYERS) nextIndex = 0;
-      return { activePlayerIndex: nextIndex };
+      
+      const nextPlayerId = state.turnOrder[nextIndex];
+      const nextPlayer = state.players.find(p => p.id === nextPlayerId);
+      
+      if (nextPlayer?.skipNextTurn) {
+        // Skip this player and clear the flag
+        const updatedPlayers = state.players.map(p => p.id === nextPlayerId ? { ...p, skipNextTurn: false } : p);
+        let evenNextIndex = nextIndex + 1;
+        if (evenNextIndex >= NUM_PLAYERS) evenNextIndex = 0;
+        
+        return { 
+          players: updatedPlayers,
+          activePlayerIndex: evenNextIndex,
+          extraTurns: 0,
+          logs: [`Giliran ${nextPlayer.name} di-skip karena efek Quickbuy.`, ...state.logs]
+        };
+      }
+      
+      return { 
+        activePlayerIndex: nextIndex,
+        extraTurns: 0
+      };
     }
 
     if (state.phase === 'SELLING') {

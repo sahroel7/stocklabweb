@@ -3,18 +3,21 @@ import { useGameStore } from '@/lib/store';
 import { Sector } from '@/lib/types';
 
 export const ChoiceModal: React.FC = () => {
-  const { pendingAction, handleChoice, market } = useGameStore();
+  const { pendingAction, handleChoice, market, extraTurns } = useGameStore();
 
   if (!pendingAction || pendingAction.playerId !== 0) return null;
 
   const { card } = pendingAction;
   const currentPrice = market[card.sector];
+  const isQuickBuying = extraTurns > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 p-4">
       <div className="bg-zinc-900 border border-white/10 p-5 rounded-3xl max-w-sm w-full shadow-2xl space-y-6">
         <div className="text-center space-y-1">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500">Pilih Aksi</h2>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-500">
+            {isQuickBuying ? 'Quickbuy (Simpan)' : 'Pilih Aksi'}
+          </h2>
           <p className="text-lg font-bold text-white leading-tight">
             Kartu <span className="text-indigo-400">{card.title}</span>
           </p>
@@ -31,25 +34,29 @@ export const ChoiceModal: React.FC = () => {
             </div>
           </button>
 
-          <button
-            onClick={() => handleChoice('ACTION')}
-            className="group relative flex flex-col items-center p-4 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-2xl transition-all shadow-lg shadow-indigo-500/20"
-          >
-            <div className="text-base font-bold text-white">Efek Kartu</div>
-            <div className="text-[9px] text-indigo-100 mt-1 italic text-center">
-              {card.description}
-            </div>
-          </button>
+          {!isQuickBuying && (
+            <>
+              <button
+                onClick={() => handleChoice('ACTION')}
+                className="group relative flex flex-col items-center p-4 bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/50 rounded-2xl transition-all shadow-lg shadow-indigo-500/20"
+              >
+                <div className="text-base font-bold text-white">Efek Kartu</div>
+                <div className="text-[9px] text-indigo-100 mt-1 italic text-center">
+                  {card.description}
+                </div>
+              </button>
 
-          <button
-            onClick={() => handleChoice('SELL')}
-            className="group relative flex flex-col items-center p-3 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 rounded-2xl transition-all"
-          >
-            <div className="text-base font-bold text-red-400">Jual Langsung</div>
-            <div className="text-[9px] text-red-500/60 mt-0.5 italic">
-              Dapat {currentPrice} koin.
-            </div>
-          </button>
+              <button
+                onClick={() => handleChoice('SELL')}
+                className="group relative flex flex-col items-center p-3 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 rounded-2xl transition-all"
+              >
+                <div className="text-base font-bold text-red-400">Jual Langsung</div>
+                <div className="text-[9px] text-red-500/60 mt-0.5 italic">
+                  Dapat {currentPrice} koin.
+                </div>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>
