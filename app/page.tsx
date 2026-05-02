@@ -12,16 +12,17 @@ import { EconomyModal } from '@/components/game/EconomyModal';
 import { PlayerSection, UserStats } from '@/components/game/PlayerSection';
 import { InteractionOverlay } from '@/components/game/InteractionOverlay';
 import { SellingModal } from '@/components/game/SellingModal';
-import { Trophy, RefreshCcw, Info, HelpCircle, X, Brain, Zap, Gauge } from 'lucide-react';
+import { Trophy, RefreshCcw, Info, HelpCircle, X, Brain, Zap, Gauge, Users, UserPlus } from 'lucide-react';
 
 export default function StocklabPage() {
   const [showRules, setShowRules] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [playerCount, setPlayerCount] = useState(5);
   
   const { 
     round, phase, players, market, resetGame, initializeGame,
     turnOrder, activePlayerIndex, marketCards, takeActionCard, 
-    pendingAction, handleChoice, interaction, sellStock
+    pendingAction, handleChoice, interaction, sellStock, setGameMode
   } = useGameStore();
 
   useEffect(() => {
@@ -34,13 +35,11 @@ export default function StocklabPage() {
 
   // Bot Automation Logic
   useEffect(() => {
-    if (!mounted || phase === 'BIDDING' || phase === 'END') return;
+    if (!mounted || phase === 'BIDDING' || phase === 'END' || phase === 'SETUP') return;
 
     // 1. ACTION PHASE AUTOMATION
-    if (phase === 'ACTION' && activePlayerId !== undefined && activePlayerId !== 0 && !interaction) {
-      const bot = players.find(p => p.id === activePlayerId);
-      if (!bot) return;
-
+    if (phase === 'ACTION' && activePlayerId !== undefined && activePlayer?.isBot && !interaction) {
+      const bot = activePlayer;
       const difficulty = bot.difficulty || 'MEDIUM';
 
       const timer = setTimeout(() => {
@@ -128,9 +127,8 @@ export default function StocklabPage() {
     }
 
     // 2. SELLING PHASE AUTOMATION
-    if (phase === 'SELLING' && activePlayerId !== 0 && activePlayerId !== undefined) {
-      const bot = players.find(p => p.id === activePlayerId);
-      if (!bot) return;
+    if (phase === 'SELLING' && activePlayer?.isBot && activePlayerId !== undefined) {
+      const bot = activePlayer;
       const difficulty = bot.difficulty || 'MEDIUM';
 
       const timer = setTimeout(() => {
@@ -209,7 +207,75 @@ export default function StocklabPage() {
       </header>
 
       <main className="max-w-7xl mx-auto p-2 md:p-6 space-y-4">
-        {phase === 'END' ? (
+        {phase === 'SETUP' ? (
+          <div className="max-w-4xl mx-auto py-12 space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="text-center space-y-4">
+              <h2 className="text-sm font-black uppercase tracking-[0.4em] text-indigo-500">Persiapan Permainan</h2>
+              <p className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase italic">Pilih Mode Bermain</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <button 
+                onClick={() => setGameMode('BOT', playerCount)}
+                className="group relative overflow-hidden bg-white/5 border border-white/10 p-8 rounded-[2.5rem] text-left transition-all hover:bg-indigo-600/10 hover:border-indigo-500/50 hover:scale-[1.02]"
+              >
+                <div className="relative z-10 space-y-6">
+                  <div className="w-16 h-16 rounded-3xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                    <Brain className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Lawan Bot</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">Berlatih melawan kecerdasan buatan dengan berbagai tingkat kesulitan.</p>
+                  </div>
+                  <div className="pt-4 flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-widest">
+                    <span>Mulai Bermain</span>
+                    <Zap className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 bg-indigo-500/5 blur-[80px] group-hover:bg-indigo-500/10 transition-colors" />
+              </button>
+
+              <button 
+                onClick={() => setGameMode('FRIENDS', playerCount)}
+                className="group relative overflow-hidden bg-white/5 border border-white/10 p-8 rounded-[2.5rem] text-left transition-all hover:bg-emerald-600/10 hover:border-emerald-500/50 hover:scale-[1.02]"
+              >
+                <div className="relative z-10 space-y-6">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Main Bareng Teman</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">Bermain secara lokal (pass-and-play) bersama teman-temanmu.</p>
+                  </div>
+                  <div className="pt-4 flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-widest">
+                    <span>Mulai Bermain</span>
+                    <UserPlus className="w-3 h-3" />
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 bg-emerald-500/5 blur-[80px] group-hover:bg-emerald-500/10 transition-colors" />
+              </button>
+            </div>
+
+            <div className="max-w-md mx-auto bg-white/5 border border-white/10 p-6 rounded-3xl space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-black uppercase tracking-widest text-white/40">Jumlah Pemain</span>
+                <span className="text-2xl font-black text-indigo-500">{playerCount}</span>
+              </div>
+              <input 
+                type="range" 
+                min="2" 
+                max="5" 
+                value={playerCount} 
+                onChange={(e) => setPlayerCount(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              />
+              <div className="flex justify-between text-[10px] font-black text-white/20 uppercase tracking-tighter">
+                <span>2 Pemain</span>
+                <span>5 Pemain</span>
+              </div>
+            </div>
+          </div>
+        ) : phase === 'END' ? (
           <div className="max-w-2xl mx-auto text-center space-y-8 animate-in fade-in zoom-in duration-500">
             <div className="inline-flex p-4 bg-yellow-500/10 rounded-full mb-4"><Trophy className="w-16 h-16 text-yellow-500" /></div>
             <h2 className="text-4xl font-black uppercase tracking-tight">Permainan Berakhir!</h2>
@@ -238,35 +304,6 @@ export default function StocklabPage() {
             <div className="lg:col-span-4 h-fit lg:sticky lg:top-24">
               <div className="space-y-6">
                 <div className="h-[300px] md:h-[400px]"><GameLog /></div>
-                
-                {/* Bot Difficulty Info */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                  <div className="flex items-center gap-2 text-indigo-400">
-                    <Brain size={18} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Intelligence System</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 text-[8px] font-bold text-white/40 uppercase"><Zap size={10} /> Bot 1</div>
-                      <span className="text-[9px] font-black text-emerald-500">EASY</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 text-[8px] font-bold text-white/40 uppercase"><Gauge size={10} /> Bot 2-3</div>
-                      <span className="text-[9px] font-black text-amber-500">MEDIUM</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 text-[8px] font-bold text-white/40 uppercase"><Brain size={10} /> Bot 4</div>
-                      <span className="text-[9px] font-black text-red-500">HARD</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex gap-3">
-                  <Info className="w-5 h-5 text-indigo-400 shrink-0" />
-                  <p className="text-[11px] text-white/40 leading-relaxed italic text-pretty">
-                    Tip: Perhatikan Bot 4 (Hard), ia akan mencoba menjual saham di harga tertinggi dan menggunakan Akuisisi saat kamu lengah.
-                  </p>
-                </div>
               </div>
             </div>
           </div>

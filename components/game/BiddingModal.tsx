@@ -9,39 +9,45 @@ export const BiddingModal: React.FC = () => {
   const [bidAmount, setBidAmount] = useState(0);
   const [mounted, setMounted] = useState(false);
 
+  // Find the first player who hasn't bid yet
+  const nextPlayerToBid = players.find(p => currentBids[p.id] === undefined);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Reset bidAmount when it's a new human player's turn to bid
+  useEffect(() => {
+    if (nextPlayerToBid && !nextPlayerToBid.isBot) {
+      setBidAmount(0);
+    }
+  }, [nextPlayerToBid?.id]);
+
   // Auto-bot bidding logic
   useEffect(() => {
     if (mounted && phase === 'BIDDING') {
-      const botsToBid = players.filter(p => p.id !== 0 && currentBids[p.id] === undefined);
+      const botsToBid = players.filter(p => p.isBot && currentBids[p.id] === undefined);
       
       if (botsToBid.length > 0) {
         const timers = botsToBid.map((bot, index) => {
           return setTimeout(() => {
-            const difficulty = bot.difficulty || 'HARD'; // All bots are Pro now
+            const difficulty = bot.difficulty || 'HARD';
             let amount = 0;
             
             if (difficulty === 'HARD') {
-              // Pro Bidding Logic
               const currentRound = useGameStore.getState().round;
               if (currentRound === 1) {
-                // High bid to secure early turn in R1 (5-12 coins)
                 amount = Math.floor(Math.random() * 8) + 5; 
               } else {
-                // Strategic bid based on cash
                 if (bot.coins > 20) {
-                  amount = Math.floor(Math.random() * 10) + 5; // 5-15 coins
+                  amount = Math.floor(Math.random() * 10) + 5;
                 } else if (bot.coins > 10) {
-                  amount = Math.floor(Math.random() * 5) + 2; // 2-7 coins
+                  amount = Math.floor(Math.random() * 5) + 2;
                 } else {
-                  amount = Math.floor(Math.random() * 3); // 0-2 coins
+                  amount = Math.floor(Math.random() * 3);
                 }
               }
             } else {
-              // Fallback for non-hard bots
               amount = Math.floor(Math.random() * 3);
             }
             
@@ -56,12 +62,11 @@ export const BiddingModal: React.FC = () => {
 
   if (!mounted || phase !== 'BIDDING') return null;
 
-  const userHasBid = currentBids[0] !== undefined;
   const allBidsIn = Object.keys(currentBids).length === players.length;
-  const userCoins = players[0]?.coins || 0;
+  const currentPlayerCoins = nextPlayerToBid?.coins || 0;
 
   const handleIncrement = () => {
-    if (bidAmount < userCoins) setBidAmount(prev => prev + 1);
+    if (bidAmount < currentPlayerCoins) setBidAmount(prev => prev + 1);
   };
 
   const handleDecrement = () => {
@@ -79,35 +84,39 @@ export const BiddingModal: React.FC = () => {
         <div className="grid grid-cols-5 gap-2">
           {players.map((p) => {
             const hasBid = currentBids[p.id] !== undefined;
-            const isUser = p.id === 0;
+            const isActive = nextPlayerToBid?.id === p.id;
             return (
               <div
                 key={p.id}
                 className={`p-2 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all ${
                   hasBid 
                     ? 'bg-indigo-500/10 border-indigo-500/30' 
-                    : 'bg-white/5 border-white/10 animate-pulse'
+                    : isActive ? 'bg-white/10 border-indigo-500/50 animate-pulse' : 'bg-white/5 border-white/10'
                 }`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black ${
-                  isUser ? 'bg-white text-black' : 'bg-white/10 text-white'
+                  isActive ? 'bg-indigo-600 text-white' : hasBid ? 'bg-white/20 text-white' : 'bg-white/10 text-white/40'
                 }`}>
-                  {isUser ? 'YOU' : `B${p.id}`}
+                  {p.id === 0 ? 'YOU' : p.isBot ? `B${p.id}` : `P${p.id + 1}`}
                 </div>
-                <span className={`text-[8px] font-black uppercase tracking-widest ${hasBid ? 'text-indigo-400' : 'text-white/20'}`}>
-                  {hasBid ? 'OK' : '...'}
+                <span className={`text-[8px] font-black uppercase tracking-widest ${hasBid ? 'text-indigo-400' : isActive ? 'text-white' : 'text-white/20'}`}>
+                  {hasBid ? 'OK' : isActive ? 'BID' : '...'}
                 </span>
               </div>
             );
           })}
         </div>
 
-        {!userHasBid ? (
+        {!allBidsIn && nextPlayerToBid && !nextPlayerToBid.isBot ? (
           <div className="bg-white/5 p-6 rounded-[2.5rem] border border-white/10 space-y-6">
+            <div className="text-center space-y-2">
+              <p className="text-xs font-black text-white/60 uppercase tracking-widest">Giliran: <span className="text-indigo-500">{nextPlayerToBid.name}</span></p>
+            </div>
+
             <div className="flex justify-between items-center">
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Saldo Anda</p>
-                <p className="text-3xl font-black text-white tabular-nums">{userCoins}</p>
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Saldo</p>
+                <p className="text-3xl font-black text-white tabular-nums">{currentPlayerCoins}</p>
               </div>
               <div className="text-right space-y-1">
                 <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Penawaran</p>
@@ -128,7 +137,7 @@ export const BiddingModal: React.FC = () => {
                 <input 
                   type="range" 
                   min={0} 
-                  max={userCoins}
+                  max={currentPlayerCoins}
                   value={bidAmount}
                   onInput={(e) => setBidAmount(parseInt((e.target as HTMLInputElement).value))}
                   className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-indigo-500 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
@@ -146,7 +155,7 @@ export const BiddingModal: React.FC = () => {
 
             <button 
               type="button"
-              onClick={() => submitBid(0, bidAmount)}
+              onClick={() => submitBid(nextPlayerToBid.id, bidAmount)}
               className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[1.5rem] font-black text-lg uppercase tracking-widest transition-all shadow-xl active:scale-95"
             >
               Kirim Penawaran
@@ -161,7 +170,7 @@ export const BiddingModal: React.FC = () => {
                   <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                   <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
                 </div>
-                <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Menunggu Bot Selesai...</p>
+                <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Menunggu {nextPlayerToBid?.isBot ? 'Bot' : 'Pemain'} Selesai...</p>
               </div>
             ) : (
               <button 
@@ -169,7 +178,7 @@ export const BiddingModal: React.FC = () => {
                 onClick={resolveBidding}
                 className="w-full py-6 bg-white text-black rounded-[2rem] font-black text-xl uppercase tracking-widest transition-all shadow-2xl animate-in zoom-in-95 hover:bg-zinc-200 active:scale-95"
               >
-                Mulai Permainan
+                Mulai Ronde
               </button>
             )}
           </div>

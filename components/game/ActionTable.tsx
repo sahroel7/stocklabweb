@@ -1,6 +1,6 @@
 import React from 'react';
 import { useGameStore } from '@/lib/store';
-import { ActionCard } from '@/lib/types';
+import { ActionCard, Sector } from '@/lib/types';
 import { MousePointer2, Zap, Info } from 'lucide-react';
 
 const sectorColors: Record<string, string> = {
@@ -25,7 +25,7 @@ export const ActionTable: React.FC = () => {
 
   const activePlayerId = turnOrder[activePlayerIndex];
   const activePlayer = players.find(p => p.id === activePlayerId);
-  const isUserTurn = activePlayerId === 0;
+  const isHumanTurn = activePlayer && !activePlayer.isBot;
 
   if (phase !== 'ACTION') return null;
 
@@ -40,9 +40,9 @@ export const ActionTable: React.FC = () => {
           <p className="text-[7px] font-bold text-white/40 uppercase tracking-widest">Pilih kartu</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10">
-          <div className={`w-2 h-2 rounded-full animate-pulse ${isUserTurn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-amber-500'}`} />
+          <div className={`w-2 h-2 rounded-full animate-pulse ${isHumanTurn ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-amber-500'}`} />
           <div className="flex flex-col">
-            <span className={`text-[10px] font-black uppercase tracking-tighter ${isUserTurn ? 'text-green-400' : 'text-amber-400'}`}>
+            <span className={`text-[10px] font-black uppercase tracking-tighter ${isHumanTurn ? 'text-green-400' : 'text-amber-400'}`}>
               {activePlayer?.name}
             </span>
           </div>
@@ -51,7 +51,7 @@ export const ActionTable: React.FC = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
         {marketCards.map((card) => {
-          const canClick = isUserTurn;
+          const canClick = isHumanTurn;
           return (
             <button 
               key={card.id} 

@@ -3,9 +3,10 @@ import { useGameStore } from '@/lib/store';
 import { Sector } from '@/lib/types';
 
 export const ChoiceModal: React.FC = () => {
-  const { pendingAction, handleChoice, market, extraTurns } = useGameStore();
+  const { pendingAction, handleChoice, market, extraTurns, players } = useGameStore();
+  const activePlayer = players.find(p => p.id === pendingAction?.playerId);
 
-  if (!pendingAction || pendingAction.playerId !== 0) return null;
+  if (!pendingAction || activePlayer?.isBot) return null;
 
   const { card } = pendingAction;
   const currentPrice = market[card.sector];

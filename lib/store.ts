@@ -103,11 +103,13 @@ interface GameActions {
   addLog: (message: string) => void;
   resetGame: () => void;
   initializeGame: () => void;
+  setGameMode: (mode: 'BOT' | 'FRIENDS', playerCount: number) => void;
 }
 
 const getInitialState = () => ({
+  gameMode: null as 'BOT' | 'FRIENDS' | null,
   round: 1,
-  phase: 'BIDDING' as Phase,
+  phase: 'SETUP' as Phase,
   players: [],
   market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
   turnOrder: [],
@@ -131,9 +133,62 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   ...getInitialState(),
 
   initializeGame: () => {
-    if (get().players.length > 0) return;
-    get().resetGame();
+    // No auto-initialization to BIDDING anymore
   },
+
+  setGameMode: (mode, playerCount) => set((state) => {
+    const players: Player[] = [];
+    
+    if (mode === 'BOT') {
+      players.push({
+        id: 0,
+        name: 'You',
+        coins: 15,
+        portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
+        reksaDana: 0,
+        debt: 0,
+        isBankrupt: false,
+        isBot: false
+      });
+      
+      for (let i = 1; i < playerCount; i++) {
+        players.push({
+          id: i,
+          name: `Pro Bot ${i}`,
+          coins: 15,
+          portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
+          reksaDana: 0,
+          debt: 0,
+          isBankrupt: false,
+          isBot: true,
+          difficulty: i === playerCount - 1 ? 'HARD' : (i % 2 === 0 ? 'MEDIUM' : 'EASY')
+        });
+      }
+    } else {
+      for (let i = 0; i < playerCount; i++) {
+        players.push({
+          id: i,
+          name: `Player ${i + 1}`,
+          coins: 15,
+          portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
+          reksaDana: 0,
+          debt: 0,
+          isBankrupt: false,
+          isBot: false
+        });
+      }
+    }
+
+    return {
+      gameMode: mode,
+      players,
+      phase: 'BIDDING',
+      actionDeck: generateActionDeck(),
+      economyDeck: generateEconomyDeck(),
+      sectorOrder: generateSectorOrder(),
+      logs: [`Game dimulai! Mode: ${mode === 'BOT' ? 'Lawan Bot' : 'Main Bareng Teman'}. Ronde 1: Fase Lelang (Bidding).`],
+    };
+  }),
 
   addLog: (message) => set((state) => ({ logs: [message, ...state.logs].slice(0, 50) })),
 
@@ -482,31 +537,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   takeDebt: (playerId) => set((state) => ({ players: state.players.map(p => p.id === playerId ? { ...p, coins: p.coins + 10, debt: 10 } : p), logs: [`${state.players.find(p => p.id === playerId)?.name} berhutang 10 koin`, ...state.logs] })),
   
   resetGame: () => set({
-    round: 1,
-    phase: 'BIDDING',
-    players: Array.from({ length: NUM_PLAYERS }, (_, i) => ({
-      id: i,
-      name: i === 0 ? 'You' : `Pro Bot ${i}`,
-      coins: 15,
-      portfolio: { Keuangan: 0, Agrikultur: 0, Tambang: 0, Konsumer: 0 },
-      reksaDana: 0,
-      debt: 0,
-      isBankrupt: false,
-      difficulty: i === 0 ? undefined : 'HARD'
-    })),
-    market: { Keuangan: INITIAL_PRICE, Agrikultur: INITIAL_PRICE, Tambang: INITIAL_PRICE, Konsumer: INITIAL_PRICE, 'Reksa Dana': INITIAL_PRICE },
-    turnOrder: [],
-    activePlayerIndex: 0,
-    actionDeck: generateActionDeck(),
-    economyDeck: generateEconomyDeck(),
-    currentEconomyCards: null,
-    marketCards: [],
-    currentBids: {},
-    suspendedSectors: [],
-    pendingAction: null,
-    extraTurns: 0,
-    tradingFeeOwners: { Keuangan: null, Agrikultur: null, Tambang: null, Konsumer: null },
-    logs: ['Game dimuat ulang! Ronde 1: Fase Lelang (Bidding).'],
-    sectorOrder: generateSectorOrder(),
+    ...getInitialState(),
+    logs: ['Game dimuat ulang! Pilih mode permainan.'],
   }),
 }));

@@ -1,6 +1,6 @@
 export type Sector = 'Keuangan' | 'Agrikultur' | 'Tambang' | 'Konsumer' | 'Reksa Dana';
 
-export type Phase = 'BIDDING' | 'ACTION' | 'SELLING' | 'ECONOMY' | 'END';
+export type Phase = 'SETUP' | 'BIDDING' | 'ACTION' | 'SELLING' | 'ECONOMY' | 'END';
 
 export interface Player {
   id: number;
@@ -12,6 +12,7 @@ export interface Player {
   isBankrupt: boolean;
   skipNextTurn?: boolean;
   difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
+  isBot?: boolean;
 }
 
 export type ActionType = 
@@ -55,6 +56,7 @@ export interface EconomyCard {
 }
 
 export interface GameState {
+  gameMode: 'BOT' | 'FRIENDS' | null;
   round: number;
   phase: Phase;
   players: Player[];

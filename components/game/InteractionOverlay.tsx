@@ -17,11 +17,15 @@ export const InteractionOverlay: React.FC = () => {
     useRumor, 
     handleAkuisisiResponse,
     market,
-    sellStock
+    sellStock,
+    turnOrder,
+    activePlayerIndex
   } = useGameStore();
 
   const [selectedSectors, setSelectedSectors] = useState<Sector[]>([]);
-  const [rumorEffects, setRumorEffects] = useState<{ sector: Sector, amount: number }[]>([]);
+
+  const activePlayerId = turnOrder[activePlayerIndex];
+  const activePlayer = players.find(p => p.id === activePlayerId);
 
   if (!interaction && !peekResults) return null;
 
@@ -94,7 +98,7 @@ export const InteractionOverlay: React.FC = () => {
             <button
               disabled={selectedSectors.length < 2}
               onClick={() => {
-                peekSectors(0, selectedSectors);
+                peekSectors(activePlayerId, selectedSectors);
                 setSelectedSectors([]);
               }}
               className="w-full py-5 bg-amber-600 disabled:bg-zinc-800 disabled:text-white/20 text-white rounded-2xl font-black uppercase tracking-widest transition-all"
@@ -106,7 +110,7 @@ export const InteractionOverlay: React.FC = () => {
 
       case 'SELECT_PLAYER':
         const sector = interaction.data as Sector;
-        const potentialTargets = players.filter(p => p.id !== 0 && (p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>] || 0) > 0);
+        const potentialTargets = players.filter(p => p.id !== activePlayerId && (p.portfolio[sector as Exclude<Sector, 'Reksa Dana'>] || 0) > 0);
         return (
           <div className="space-y-8">
             <div className="text-center space-y-2">
@@ -119,7 +123,7 @@ export const InteractionOverlay: React.FC = () => {
               {potentialTargets.length > 0 ? potentialTargets.map(p => (
                 <button
                   key={p.id}
-                  onClick={() => handleAkuisisiResponse(0, p.id)}
+                  onClick={() => handleAkuisisiResponse(activePlayerId, p.id)}
                   className="w-full p-6 bg-white/5 border border-white/10 rounded-[2rem] flex justify-between items-center hover:bg-white/10 transition-all group"
                 >
                   <div className="flex items-center gap-4">
@@ -147,7 +151,7 @@ export const InteractionOverlay: React.FC = () => {
         );
 
       case 'SELECT_STOCK':
-        const myStocks = (Object.entries(players[0].portfolio) as [Sector, number][]).filter(([_, count]) => count > 0);
+        const myStocks = activePlayer ? (Object.entries(activePlayer.portfolio) as [Sector, number][]).filter(([_, count]) => count > 0) : [];
         return (
           <div className="space-y-8">
             <div className="text-center space-y-2">
@@ -159,7 +163,7 @@ export const InteractionOverlay: React.FC = () => {
               {myStocks.length > 0 ? myStocks.map(([s, count]) => (
                 <button
                   key={s}
-                  onClick={() => sellStock(0, s, count)}
+                  onClick={() => sellStock(activePlayerId, s, count)}
                   className="w-full p-6 bg-white/5 border border-white/10 rounded-[2rem] flex justify-between items-center hover:bg-white/10 transition-all"
                 >
                   <span className="font-bold text-white whitespace-nowrap">Saham {s}</span>
@@ -198,13 +202,13 @@ export const InteractionOverlay: React.FC = () => {
                  <p className="text-[10px] font-black uppercase text-white/40 tracking-widest">Opsi A: Satu Saham (+/- 2)</p>
                  <div className="flex gap-2">
                     <button 
-                      onClick={() => useRumor(0, [{ sector: rumorSector, amount: 2 }])}
+                      onClick={() => useRumor(activePlayerId, [{ sector: rumorSector, amount: 2 }])}
                       className="flex-1 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-2xl font-bold transition-all whitespace-nowrap"
                     >
                       +2 Saham {rumorSector}
                     </button>
                     <button 
-                      onClick={() => useRumor(0, [{ sector: rumorSector, amount: -2 }])}
+                      onClick={() => useRumor(activePlayerId, [{ sector: rumorSector, amount: -2 }])}
                       className="flex-1 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded-2xl font-bold transition-all whitespace-nowrap"
                     >
                       -2 Saham {rumorSector}
@@ -220,13 +224,13 @@ export const InteractionOverlay: React.FC = () => {
                    {SECTORS.filter(s => s !== rumorSector).map(s => (
                      <div key={s} className="flex gap-1">
                         <button 
-                          onClick={() => useRumor(0, [{ sector: rumorSector, amount: 1 }, { sector: s, amount: 1 }])}
+                          onClick={() => useRumor(activePlayerId, [{ sector: rumorSector, amount: 1 }, { sector: s, amount: 1 }])}
                           className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all whitespace-nowrap"
                         >
                           +1 Saham {s}
                         </button>
                         <button 
-                          onClick={() => useRumor(0, [{ sector: rumorSector, amount: -1 }, { sector: s, amount: -1 }])}
+                          onClick={() => useRumor(activePlayerId, [{ sector: rumorSector, amount: -1 }, { sector: s, amount: -1 }])}
                           className="flex-1 p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-bold text-white transition-all whitespace-nowrap"
                         >
                           -1 Saham {s}
