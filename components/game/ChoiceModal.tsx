@@ -3,7 +3,7 @@ import { useGameStore } from '@/lib/store';
 import { Sector } from '@/lib/types';
 
 export const ChoiceModal: React.FC = () => {
-  const { pendingAction, handleChoice, market, extraTurns, players } = useGameStore();
+  const { pendingAction, handleChoice, market, extraTurns, players, cancelActionCard } = useGameStore();
   const activePlayer = players.find(p => p.id === pendingAction?.playerId);
 
   if (!pendingAction || activePlayer?.isBot) return null;
@@ -49,7 +49,7 @@ export const ChoiceModal: React.FC = () => {
 
               <button
                 onClick={() => handleChoice('SELL')}
-                className="group relative flex flex-col items-center p-3 bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 rounded-2xl transition-all"
+                className="group relative flex flex-col items-center p-3 bg-red-600/10 hover:bg-red-200/20 border border-red-500/20 rounded-2xl transition-all"
               >
                 <div className="text-base font-bold text-red-400">Jual Langsung</div>
                 <div className="text-[9px] text-red-500/60 mt-0.5 italic">
@@ -58,6 +58,13 @@ export const ChoiceModal: React.FC = () => {
               </button>
             </>
           )}
+
+          <button
+            onClick={() => cancelActionCard()}
+            className="w-full py-3 mt-2 text-white/40 font-bold uppercase tracking-widest hover:text-white transition-colors text-[10px]"
+          >
+            Batal Pilih
+          </button>
         </div>
       </div>
     </div>

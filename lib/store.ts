@@ -104,6 +104,7 @@ interface GameActions {
   resetGame: () => void;
   initializeGame: () => void;
   setGameMode: (mode: 'BOT' | 'FRIENDS', playerCount: number) => void;
+  cancelActionCard: () => void;
 }
 
 const getInitialState = () => ({
@@ -289,6 +290,15 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     return { 
       marketCards: newMarketCards,
       pendingAction: { playerId, card }
+    };
+  }),
+
+  cancelActionCard: () => set((state) => {
+    if (!state.pendingAction) return state;
+    const { card } = state.pendingAction;
+    return {
+      marketCards: [...state.marketCards, card],
+      pendingAction: null
     };
   }),
 

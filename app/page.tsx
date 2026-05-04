@@ -295,7 +295,7 @@ export default function StocklabPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-8 space-y-4">
-              <UserStats />
+              <UserStats key={activePlayerId} />
               <MarketBoard />
               <PlayerSection />
               <div className="pt-4"><ActionTable /></div>

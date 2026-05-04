@@ -20,20 +20,16 @@ export const UserStats: React.FC = () => {
   const turnOrder = useGameStore(state => state.turnOrder);
   const activePlayerIndex = useGameStore(state => state.activePlayerIndex);
   
-  const [mounted, setMounted] = React.useState(false);
+  // Local state for this specific turn (reset automatically by 'key' in parent)
   const [isRevealed, setIsRevealed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  const activePlayerId = turnOrder[activePlayerIndex] ?? players[0]?.id;
-  const activePlayer = players.find(p => p.id === activePlayerId) || players[0];
+  const activePlayerId = turnOrder[activePlayerIndex];
+  const activePlayer = players.find(p => p.id === activePlayerId);
 
-  // Auto-hide stats when player turn changes
-  useEffect(() => {
-    setIsRevealed(false);
-  }, [activePlayerId]);
-
-  if (!mounted || players.length === 0) return <div className="h-10 bg-white/5 animate-pulse rounded-2xl mb-4" />;
+  if (!mounted || !activePlayer) return <div className="h-10 bg-white/5 animate-pulse rounded-2xl mb-4" />;
 
   const netWorth = calculateNetWorth(activePlayer, market);
 
@@ -59,16 +55,25 @@ export const UserStats: React.FC = () => {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
             <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Net Worth</span>
-            <span className={`text-sm font-black text-emerald-400 tabular-nums transition-all duration-300 ${!activePlayer.isBot && !isRevealed ? 'blur-md select-none opacity-20' : 'blur-0'}`}>
+            <span className={`text-sm font-black text-emerald-400 tabular-nums ${
+              !activePlayer.isBot && !isRevealed 
+                ? 'opacity-0 scale-95 blur-xl select-none pointer-events-none' 
+                : 'opacity-100 scale-100 blur-0 transition-all duration-300'
+            }`}>
               ${netWorth}
             </span>
         </div>
         <div className="flex items-center gap-2">
             <span className="text-[8px] font-black text-white/30 uppercase tracking-widest">Cash</span>
-            <span className={`text-sm font-black text-yellow-400 tabular-nums transition-all duration-300 ${!activePlayer.isBot && !isRevealed ? 'blur-md select-none opacity-20' : 'blur-0'}`}>
+            <span className={`text-sm font-black text-yellow-400 tabular-nums ${
+              !activePlayer.isBot && !isRevealed 
+                ? 'opacity-0 scale-95 blur-xl select-none pointer-events-none' 
+                : 'opacity-100 scale-100 blur-0 transition-all duration-300'
+            }`}>
               {activePlayer.coins}
             </span>
         </div>
+
         {!activePlayer.isBot && activePlayer.debt === 0 && (
           <button 
             onClick={() => useGameStore.getState().takeDebt(activePlayer.id)}
