@@ -41,36 +41,37 @@ const getCardDescription = (type: ActionType, sector: string): string => {
 
 const generateActionDeck = (): ActionCard[] => {
   const stockSectors: Exclude<Sector, 'Reksa Dana'>[] = ['Keuangan', 'Agrikultur', 'Tambang', 'Konsumer'];
-  const types: ActionType[] = ['INFO_BURSA', 'RUMOR', 'QUICKBUY', 'TRADING_FEE', 'AKUISISI'];
+  const allSectors: Sector[] = [...stockSectors, 'Reksa Dana'];
   const deck: ActionCard[] = [];
   
-  stockSectors.forEach(sector => {
-    types.forEach(type => {
-      for (let i = 0; i < 3; i++) {
-        deck.push({
-          id: `${type}-${sector}-${i}-${Math.random().toString(36).substr(2, 9)}`,
-          type,
-          sector,
-          title: getCardTitle(type, sector),
-          description: getCardDescription(type, sector),
-          color: getSectorColor(sector),
-        });
-      }
-    });
-  });
+  const counts: Record<ActionType, number> = {
+    'RUMOR': 20,
+    'INFO_BURSA': 14,
+    'QUICKBUY': 10,
+    'TRADING_FEE': 9,
+    'AKUISISI': 7
+  };
 
-  const rdTypes: ActionType[] = ['QUICKBUY', 'TRADING_FEE'];
-  rdTypes.forEach(type => {
-     for (let i = 0; i < 4; i++) {
-        deck.push({
-          id: `${type}-RD-${i}-${Math.random().toString(36).substr(2, 9)}`,
-          type,
-          sector: 'Reksa Dana',
-          title: getCardTitle(type, 'Reksa Dana'),
-          description: getCardDescription(type, 'Reksa Dana'),
-          color: getSectorColor('Reksa Dana'),
-        });
-     }
+  Object.entries(counts).forEach(([type, count]) => {
+    const actionType = type as ActionType;
+    for (let i = 0; i < count; i++) {
+      let sector: Sector;
+      // Rumor and Akuisisi only for stock sectors
+      if (actionType === 'RUMOR' || actionType === 'AKUISISI') {
+        sector = stockSectors[i % stockSectors.length];
+      } else {
+        sector = allSectors[i % allSectors.length];
+      }
+
+      deck.push({
+        id: `${actionType}-${sector}-${i}-${Math.random().toString(36).substr(2, 9)}`,
+        type: actionType,
+        sector,
+        title: getCardTitle(actionType, sector),
+        description: getCardDescription(actionType, sector),
+        color: getSectorColor(sector),
+      });
+    }
   });
 
   return deck.sort(() => Math.random() - 0.5);
@@ -223,7 +224,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       for (const card of cards) {
         sectorCounts[card.sector] = (sectorCounts[card.sector] || 0) + 1;
         typeCounts[card.type] = (typeCounts[card.type] || 0) + 1;
-        if (sectorCounts[card.sector] > 5 || typeCounts[card.type] > 3) return false;
+        // Rumor has 20 cards, so we can expect more in the market.
+        // Relaxing type constraint to 5, sector to 6.
+        if (sectorCounts[card.sector] > 6 || typeCounts[card.type] > 5) return false;
       }
       return true;
     };
@@ -264,7 +267,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       for (const card of cards) {
         sectorCounts[card.sector] = (sectorCounts[card.sector] || 0) + 1;
         typeCounts[card.type] = (typeCounts[card.type] || 0) + 1;
-        if (sectorCounts[card.sector] > 5 || typeCounts[card.type] > 3) return false;
+        if (sectorCounts[card.sector] > 6 || typeCounts[card.type] > 5) return false;
       }
       return true;
     };
